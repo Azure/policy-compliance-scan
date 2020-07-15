@@ -64,3 +64,5 @@ export async function run() {
     core.setFailed(error.message);
   }
 }
+
+run().catch(error => core.setFailed(error.message));
