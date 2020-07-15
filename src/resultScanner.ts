@@ -353,8 +353,9 @@ function sleep(ms) {
     return csvRows;
   }
 
-export async function createCSV(data : any[], csvName: string){
+export async function createCSV(data : any[]){
     try{
+      const csvName = core.getInput('csv-name') + ".csv";
       let fileName = csvName ? csvName : CSV_FILENAME;
       let filePath = fileHelper.writeToCSVFile(data, fileName);
       await fileHelper.uploadFile(

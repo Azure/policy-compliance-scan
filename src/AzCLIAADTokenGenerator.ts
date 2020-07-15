@@ -5,6 +5,15 @@ var azPath: string;
 //This will be takean as input from user
 const resource = "https://management.azure.com/";
 
+export async function getAccessToken(): Promise<string> {
+    let accessToken = '';
+    await getAADToken().then(token => {
+        const tokenObject = JSON.parse(token);
+        accessToken = tokenObject.accessToken;
+    });
+    return accessToken;
+}
+
 export async function getAADToken(): Promise<string> {
     azPath = await io.which("az", true);
     return await getTokenFromAzCLI("account get-access-token --resource=" + resource);
