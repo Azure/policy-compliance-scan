@@ -1,0 +1,20 @@
+name: 'AzPac'
+description: 'Azure policy as code action'
+inputs: 
+  scopes: # id of input
+    description: 'Scopes to perform scanning on'
+    required: true
+  ignore-result:
+    description: 'List of resource identifiers for which compliance results will be ignored. Action will continue irrespective of their compliance state'
+    required: false
+  poll-timeout:
+    description: 'Timeout duration for polling in minutes'
+    required: false
+    default: 20
+  csv-name:
+    description: 'Name of csv to be generated'
+    required: false
+    default: ScanResults
+runs:
+  using: 'node12'
+  main: 'lib/run.js'

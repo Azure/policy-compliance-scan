@@ -1,0 +1,33 @@
+{
+  "name": "azpac",
+  "version": "1.0.0",
+  "description": "Azure policy as code action",
+  "main": "run.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ajinkya599/AzPac.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ajinkya599/AzPac/issues"
+  },
+  "homepage": "https://github.com/ajinkya599/AzPac#readme",
+  "devDependencies": {
+    "@types/node": "^14.0.14",
+    "typescript": "^3.9.5"
+  },
+  "dependencies": {
+    "@actions/artifact": "^0.3.2",
+    "@actions/core": "^1.2.4",
+    "@actions/exec": "^1.0.1",
+    "@actions/io": "^1.0.1",
+    "table": "5.4.6",
+    "typed-rest-client": "^1.5.0",
+    "uuid": "8.1.0"
+  }
+}
