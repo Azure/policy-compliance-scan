@@ -3,8 +3,16 @@ import * as path from 'path';
 import * as core from '@actions/core';
 import * as os from 'os';
 import {create, UploadOptions} from '@actions/artifact';
+import * as resultScanner from './resultScanner';
 
 let POLICY_SCAN_DIRECTORY = '';
+
+export function getScanReportPath(): string {
+    //Creating intermediate file to store success records
+    const scanReportPath = `${getPolicyScanDirectory()}/${resultScanner.JSON_FILENAME}`;
+    fs.writeFileSync(scanReportPath, "");
+    return scanReportPath;
+}
 
 export function getFileJson(path: string): any {
     let rawContent = '';

@@ -12,9 +12,9 @@ export async function run() {
     let pollLocations: any[] = [];
     await triggerOnDemandScan().then(locations => pollLocations = locations);
 
-    //Creating intermediate file to store success records
-    const scanReportPath = `${fileHelper.getPolicyScanDirectory()}/${resultScanner.JSON_FILENAME}`;
-    fs.writeFileSync(scanReportPath, "");
+    //Get intermediate file path to store success records
+    const scanReportPath = fileHelper.getScanReportPath();
+
     //Polls and records successful non-compliant responses
     await pollForCompletion(pollLocations).catch(error => {
       throw Error(error);
