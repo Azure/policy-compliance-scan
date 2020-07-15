@@ -21,13 +21,18 @@ export async function run() {
     });
 
     //Fetch all successful non-compliant responses
+    const csvName = core.getInput('csv-name') + ".csv";
+    const skipArtifacts = core.getInput('skip-artifacts') == 'true' ? true : false;
+    const maxLogRecords = Number.parseInt(core.getInput('max-log-records'));
     const out = fileHelper.getFileJson(scanReportPath);
     if (out != null && out.length > 0) {
 
       //Console print and csv publish
       printPartitionedText('Policy compliance scan report::');
-      let csv_object = resultScanner.printFormattedOutput(out);
-      await resultScanner.createCSV(csv_object);
+      let csv_object = resultScanner.printFormattedOutput(out, maxLogRecords, skipArtifacts);
+      if(!skipArtifacts){
+        await resultScanner.createCSV(csv_object, csvName);
+      }
 
       throw Error("1 or more resources were non-compliant");
     }
