@@ -98,7 +98,7 @@ test("printFormattedOutput - called with the result from scan report", async () 
     fileHelperMock.getScanReportPath = jest.fn().mockReturnValue('');
     fileHelperMock.getFileJson = jest.fn().mockReturnValue([1, 2, 3]);
     resultScannerMock.printFormattedOutput = jest.fn().mockReturnValue([5, 6, 7]);
-    resultScannerMock.createCSV = jest.fn();
+    fileHelperMock.createCSV = jest.fn();
 
     //Invoke and assert
     await expect(run()).resolves.not.toThrow();
