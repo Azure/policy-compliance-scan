@@ -1,4 +1,5 @@
 import * as core from '@actions/core';
+import { parseEnvNumber } from '@actions/artifact/lib/internal-utils';
 import * as table from 'table';
 import { dirname } from 'path';
 import * as fileHelper from '../utils/fileHelper';
@@ -19,6 +20,8 @@ const TITLE_RESOURCE_TYPE = "RESOURCE_TYPE";
 const TITLE_RESOURCE_LOCATION = "RESOURCE_LOCATION";
 const TITLE_COMPLIANCE_STATE = "COMPLIANCE_STATE";
 const TITLE_POLICY_EVAL = "POLICY_EVALUATION";
+const MAX_LOG_ROWS_VAR = 'MAX_LOG_ROWS';
+const DEFAULT_MAX_LOG_ROWS = 250;
 
 export async function generateSummary(): Promise<void> {
   //Get intermediate file path to store success records
@@ -84,9 +87,11 @@ function getConfigForTable(widths: number[]): any {
   return config;
 }
 
-function printFormattedOutput(data: any[]): any[] {
+export function printFormattedOutput(data: any[]): any[] {
   const skipArtifacts = core.getInput('skip-artifacts') == 'true' ? true : false;
-  const maxLogRecords = Number.parseInt(core.getInput('max-log-records'));
+  let maxLogRowsEnvVar = parseEnvNumber(MAX_LOG_ROWS_VAR);
+  let maxLogRecords = maxLogRowsEnvVar == undefined ? DEFAULT_MAX_LOG_ROWS : maxLogRowsEnvVar;
+  //Number.parseInt(core.getInput('max-log-records'));
   let rows: any = [];
   let csvRows: any = [];
   let titles = [TITLE_RESOURCE_ID, TITLE_POLICY_ASSG_ID, TITLE_POLICY_DEF_ID, TITLE_RESOURCE_TYPE, TITLE_RESOURCE_LOCATION, TITLE_POLICY_EVAL, TITLE_COMPLIANCE_STATE];
