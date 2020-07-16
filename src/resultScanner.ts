@@ -1,4 +1,5 @@
 import * as core from '@actions/core';
+import { parseEnvNumber } from '@actions/artifact/lib/internal-utils';
 import { StatusCodes, WebRequest, WebResponse, sendRequest } from "./client";
 import { getAADToken } from './AzCLIAADTokenGenerator';
 import * as fs from 'fs';
@@ -6,7 +7,7 @@ import * as fileHelper from './fileHelper';
 import * as table from 'table';
 import {dirname} from 'path'
 import { ignoreScope } from './ignoreResultHelper'
-import { printPartitionedText, sleep } from './Utility'
+import { printPartitionedText, sleep, printPartitionedDebugLog } from './Utility'
 
 const KEY_RESOURCE_ID = "resourceId";
 const KEY_POLICY_ASSG_ID = "policyAssignmentId";
@@ -23,6 +24,10 @@ const TITLE_RESOURCE_LOCATION = "RESOURCE_LOCATION";
 const TITLE_COMPLIANCE_STATE = "COMPLIANCE_STATE";
 const TITLE_POLICY_EVAL = "POLICY_EVALUATION";
 const BATCH_MAX_SIZE = 500;
+const MAX_LOG_ROWS_VAR = 'MAX_LOG_ROWS';
+const DEFAULT_MAX_LOG_ROWS = 250;
+const BATCH_POLL_INTERVAL: number = 60 * 1000; // 1 min = 60 * 1000ms
+const POLL_TIMEOUT_DURATION: number = 5  * 60 * 1000;  //5 mins
 
 export const CSV_FILENAME = 'ScanReport.csv';
 export const JSON_FILENAME = 'scanReport.json';
@@ -102,15 +107,65 @@ function getPolicyEvaluationDetails(evalData : any) : any{
   });
  }
 
-  export async function batchCalls(uri: string, method: string ,commonHeaders: any, polls: any[], token: string): Promise<any[]> {    
+ function processCreatedResponses(receivedResponses: any[]): any{
+  let resultObj = {
+      finalResponses: new Array(),
+      responseNextPage: new Array(),
+      pendingResponses: new Array()
+  };
+
+  resultObj.pendingResponses = receivedResponses.map((pendingResponse: any) => {
+    if (pendingResponse.statusCode == 200){
+      if(pendingResponse != null && pendingResponse.body != null){
+        let values = pendingResponse.body.responses ? pendingResponse.body.responses : pendingResponse.body.value;
+        core.debug(`Saving ${values.length} scopes to result.`)
+        values.forEach(response => {
+          resultObj.finalResponses.push(response); //Saving to final response array
+          //Will be called in next set of batch calls to get the paginated responses
+          if(response.content["@odata.nextLink"] != null){   
+            resultObj.responseNextPage.push({'scope' : response.content["@odata.nextLink"]  });
+          }
+        });
+      }
+      return null;
+    }
+    else if(pendingResponse.statusCode == 202){ 
+      return pendingResponse;
+    }
+  }).filter((pendingResponse) => { return pendingResponse != null });
+
+  return resultObj;
+ }
+
+ async function pollPendingResponses(pendingResponses: any[], token: string):Promise<any[]>{
+  
+  if(pendingResponses.length > 0){
+    core.debug(`Polling requests # ${pendingResponses.length}  ==>`);
+    await sleep(BATCH_POLL_INTERVAL); // Delay before next poll
+    return await Promise.all(pendingResponses.map(async (pendingResponse: any) => {
+      return await batchCall(pendingResponse.headers.location,'GET', [] ,token).then(response => {
+        if (response.statusCode == 200){ //Will be saved in next iteration
+          return response;
+        }
+        if (response.statusCode == 202){ //Will be polled in next iteration
+          return pendingResponse;
+        }
+      });
+    })); 
+  }
+  return pendingResponses;
+ }
+
+ export async function batchCalls(uri: string, method: string ,commonHeaders: any, polls: any[], token: string): Promise<any[]> {    
 
     let pendingPolls = polls;
     let requests : any = [];
     let requestNum = 0;
-    let responses : any = [];
-    //For response pagination ($skipToken calls)
+    let finalResponses : any = [];
+    //For paginated response fetching ($skipToken)
     while(pendingPolls.length > 0){
 
+      //Creating total request list
       pendingPolls.forEach(poll => {
         let scope = poll.scope;
         requests.push({
@@ -121,12 +176,14 @@ function getPolicyEvaluationDetails(evalData : any) : any{
           'url' : uri.replace("${scope}",scope)
         });
       });
+      pendingPolls = [];
 
       let batchResponses : any = [];
       let pendingResponses : any = [];
+
+      //Sending batch calls for all records in pendingPolls in batches of BATCH_MAX_SIZE 
       let start = 0;
       let end = (start + BATCH_MAX_SIZE) >= requests.length ? requests.length : (start + BATCH_MAX_SIZE);
-      //Sending batch calls for all records in pendingPolls in batches of BATCH_MAX_SIZE 
       try{
         while(end <= requests.length && start < end){   
           
@@ -143,59 +200,26 @@ function getPolicyEvaluationDetails(evalData : any) : any{
       }
       
       //Evaluating all batch responses
-      pendingPolls = [];
       let hasPollTimedout: boolean = false;
-      const pollTimeoutDuration: number = 5  * 60 * 1000;  //5 mins
-      let pollTimeoutId = setTimeout(() => { hasPollTimedout = true; }, pollTimeoutDuration);
-      const pollInterval: number = 60 * 1000; // 1 min = 60 * 1000ms
+      let pollTimeoutId = setTimeout(() => { hasPollTimedout = true; }, POLL_TIMEOUT_DURATION);
+      
       pendingResponses.push(...batchResponses);
-      let responseString : string;
       
       try{
-        let isSleepRequired : boolean = false;
-        //Run until all responses are CREATED
+        //Run until all batch-responses are CREATED
         while(pendingResponses.length > 0 && !hasPollTimedout){
           //Saving CREATED responses 
-          pendingResponses = pendingResponses.map((pendingResponse: any) => {
-            if (pendingResponse.statusCode == 200){
-              if(pendingResponse != null && pendingResponse.body != null){
-                let values = pendingResponse.body.responses ? pendingResponse.body.responses : pendingResponse.body.value;
-                core.debug(`Saving ${values.length} scopes to result.`)
-                values.forEach(response => {
-                  responses.push(response); //Saving to final response array
-                  //Will be called in next set of batch calls to get the paginated responses
-                  if(response.content["@odata.nextLink"] != null){   
-                    pendingPolls.push({'scope' : response.content["@odata.nextLink"]  });
-                  }
-                });
-              }
-              return null;
-            }
-            else if(pendingResponse.statusCode == 202){ 
-              return pendingResponse;
-            }
-          }).filter((pendingResponse) => { return pendingResponse != null });
-          isSleepRequired = false;
-          if(pendingResponses.length > 0){
-            //Polling remaining batches (Status = ACCEPTED)
-            core.debug(`Polling requests # ${pendingResponses.length}  ==>`);
-            
-            pendingResponses = await Promise.all(pendingResponses.map(async (pendingResponse: any) => {
-              return await batchCall(pendingResponse.headers.location,'GET', [] ,token).then(response => {
-                if (response.statusCode == 200){ //Will be saved in next iteration
-                  return response;
-                }
-                if (response.statusCode == 202){ //Will be polled in next iteration
-                  isSleepRequired = true;
-                  return pendingResponse;
-                }
-              });
-            })); 
-          }
-          if (!hasPollTimedout && pendingResponses.length > 0 && isSleepRequired) {
-            core.debug(` --------------- # of batches pending: ${pendingResponses.length}`);
-            await sleep(pollInterval);
-          }
+          let intermediateResult: any = processCreatedResponses(pendingResponses);
+          pendingResponses = intermediateResult.pendingResponses;
+
+          finalResponses.push(...intermediateResult.finalResponses);
+          pendingPolls.push(...intermediateResult.responseNextPage); //For getting paginated responses
+          
+          //Polling remaining batch-responses with status = ACCEPTED
+          await pollPendingResponses(pendingResponses, token).then(pollingResponses => {
+            pendingResponses = pollingResponses;
+          })
+
           if (hasPollTimedout && pendingResponses.length > 0) {
             throw Error('Polling status timed-out.');
           }
@@ -215,8 +239,8 @@ function getPolicyEvaluationDetails(evalData : any) : any{
       core.debug(`# of paginated calls: ${pendingPolls.length}`);
     }
 
-    core.debug(`Getting batch calls final responses # :: ${responses.length}`);
-    return Promise.resolve(responses);
+    core.debug(`Getting batch calls final responses # :: ${finalResponses.length}`);
+    return Promise.resolve(finalResponses);
   }
 
   export async function getScanResult(polls: any[], token: string) {
@@ -229,7 +253,7 @@ function getPolicyEvaluationDetails(evalData : any) : any{
     let policyEvalUrl = 'https://management.azure.com${scope}/providers/Microsoft.PolicyInsights/policyStates/latest/queryResults?api-version=2019-10-01&$expand=PolicyEvaluationDetails';
     
     //First batch call
-    printPartitionedText('First set of batch calls::');
+    printPartitionedDebugLog('First set of batch calls::');
     await batchCalls(scanResultUrl,'POST', null, polls, token).then((responseList) => { 
       responseList.forEach(resultsObject => {
         if(resultsObject.httpStatusCode == 200){
@@ -248,7 +272,7 @@ function getPolicyEvaluationDetails(evalData : any) : any{
 
     core.debug("Unique scopes length : " + scopes.length); 
 
-    printPartitionedText('Second set of batch calls::');
+    printPartitionedDebugLog('Second set of batch calls::');
     await batchCalls(policyEvalUrl,'POST', null, scopes, token).then((responseList) => {   
       responseList.forEach(resultsObject => {
         if(resultsObject.httpStatusCode == 200){
@@ -334,7 +358,9 @@ function getPolicyEvaluationDetails(evalData : any) : any{
   
   export function printFormattedOutput(data : any[]): any[] {
     const skipArtifacts = core.getInput('skip-artifacts') == 'true' ? true : false;
-    const maxLogRecords = Number.parseInt(core.getInput('max-log-records'));
+    let maxLogRowsEnvVar = parseEnvNumber(MAX_LOG_ROWS_VAR);
+    let maxLogRecords = maxLogRowsEnvVar == undefined ? DEFAULT_MAX_LOG_ROWS : maxLogRowsEnvVar;
+    //Number.parseInt(core.getInput('max-log-records'));
     let rows : any = [];
     let csvRows : any = [];
     let titles = [TITLE_RESOURCE_ID, TITLE_POLICY_ASSG_ID, TITLE_POLICY_DEF_ID, TITLE_RESOURCE_TYPE, TITLE_RESOURCE_LOCATION, TITLE_POLICY_EVAL, TITLE_COMPLIANCE_STATE];

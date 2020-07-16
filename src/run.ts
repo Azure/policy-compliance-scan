@@ -25,9 +25,10 @@ export async function run() {
     if (nonCompliantResources != null && nonCompliantResources.length > 0) {
       //Console print and csv publish
       printPartitionedText('Policy compliance scan report::');
+      let csv_object = resultScanner.printFormattedOutput(nonCompliantResources);
+      
       const skipArtifacts = core.getInput('skip-artifacts') == 'true' ? true : false;
       if (!skipArtifacts) {
-        let csv_object = resultScanner.printFormattedOutput(nonCompliantResources);
         const csvName = core.getInput('csv-name') + ".csv";
         await resultScanner.createCSV(csv_object, csvName);
       }

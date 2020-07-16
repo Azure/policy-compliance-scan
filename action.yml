@@ -15,10 +15,6 @@ inputs:
     description: 'To skip generation of csv artifact'
     required: false
     default: false
-  max-log-records:
-    description: 'Maximum non-compliant records to print on logs'
-    required: false
-    default: 250
 runs:
   using: 'node12'
   main: 'lib/run.js'
