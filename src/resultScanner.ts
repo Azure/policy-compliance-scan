@@ -171,7 +171,7 @@ function getPolicyEvaluationDetails(evalData : any) : any{
               }
               return null;
             }
-            else if(pendingResponse.statusCode == StatusCodes.ACCEPTED){ 
+            else if(pendingResponse.statusCode == 202){ 
               return pendingResponse;
             }
           }).filter((pendingResponse) => { return pendingResponse != null });
