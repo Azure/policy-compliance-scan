@@ -115,11 +115,11 @@ test("createCSV - to be called when skip-artifacts is false", async () => {
     fileHelperMock.getScanReportPath = jest.fn().mockReturnValue('');
     fileHelperMock.getFileJson = jest.fn().mockReturnValue([1, 2, 3]);
     resultScannerMock.printFormattedOutput = jest.fn().mockReturnValue([5, 6, 7]);
-    resultScannerMock.createCSV = jest.fn();
+    fileHelperMock.createCSV = jest.fn();
 
     //Invoke and assert
     await expect(run()).resolves.not.toThrow();
-    expect(resultScannerMock.createCSV).toBeCalled();
+    expect(fileHelperMock.createCSV).toBeCalled();
 });
 
 test("createCSV - not to be called when skip-artifacts is true", async () => {
@@ -136,9 +136,9 @@ test("createCSV - not to be called when skip-artifacts is true", async () => {
     fileHelperMock.getScanReportPath = jest.fn().mockReturnValue('');
     fileHelperMock.getFileJson = jest.fn().mockReturnValue([1, 2, 3]);
     resultScannerMock.printFormattedOutput = jest.fn().mockReturnValue([5, 6, 7]);
-    resultScannerMock.createCSV = jest.fn();
+    fileHelperMock.createCSV = jest.fn();
 
     //Invoke and assert
     await expect(run()).resolves.not.toThrow();
-    expect(resultScannerMock.createCSV).toBeCalledTimes(0);
+    expect(fileHelperMock.createCSV).toBeCalledTimes(0);
 });
