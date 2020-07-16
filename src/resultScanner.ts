@@ -332,7 +332,9 @@ function getPolicyEvaluationDetails(evalData : any) : any{
     return config;
   }
   
-  export function printFormattedOutput(data : any[], maxLogRecords : number, skipArtifacts: boolean): any[] {
+  export function printFormattedOutput(data : any[]): any[] {
+    const skipArtifacts = core.getInput('skip-artifacts') == 'true' ? true : false;
+    const maxLogRecords = Number.parseInt(core.getInput('max-log-records'));
     let rows : any = [];
     let csvRows : any = [];
     let titles = [TITLE_RESOURCE_ID, TITLE_POLICY_ASSG_ID, TITLE_POLICY_DEF_ID, TITLE_RESOURCE_TYPE, TITLE_RESOURCE_LOCATION, TITLE_POLICY_EVAL, TITLE_COMPLIANCE_STATE];

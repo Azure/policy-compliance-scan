@@ -5,7 +5,8 @@
   "main": "run.js",
   "scripts": {
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "test-coverage": "jest --coverage"
   },
   "repository": {
     "type": "git",
@@ -19,6 +20,9 @@
   "homepage": "https://github.com/ajinkya599/AzPac#readme",
   "devDependencies": {
     "@types/node": "^14.0.14",
+    "@types/jest": "^26.0.4",
+    "jest": "^25.5.4",
+    "ts-jest": "^25.5.1",
     "typescript": "^3.9.5"
   },
   "dependencies": {

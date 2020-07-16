@@ -89,15 +89,11 @@ export async function pollForCompletion(pollLocations: any[]) {
   let pendingPolls: any[] = pollLocations;
 
   let pollRound: number = 1;
-  let hasPollTimedout: boolean = false;
-  const pollTimeoutDuration: number = parseInt(core.getInput('poll-Timeout'));
-  // Setting poll timeout
-  let pollTimeoutId = setTimeout(() => { hasPollTimedout = true; }, pollTimeoutDuration * 60 * 1000);
   const pollInterval: number = 60 * 1000; // 60000ms = 1min
   try {
-    printPartitionedText(`Poll timeout (minutes):: ${pollTimeoutDuration} , Poll interval (ms):: ${pollInterval}`);
-    while (pendingPolls.length > 0 && !hasPollTimedout) {
-      //printPartitionedText(`Poll round: ${pollRound}, No. of pending polls: ${pendingPolls.length}`);
+    printPartitionedText(`Poll interval (ms):: ${pollInterval}`);
+    while (pendingPolls.length > 0) {
+      printPartitionedText(`Poll round: ${pollRound}, No. of pending polls: ${pendingPolls.length}`);
       let pendingPollsNew: any[] = [];
       let completedPolls: any[] = [];
       for (const poll of pendingPolls) {
@@ -127,9 +123,6 @@ export async function pollForCompletion(pollLocations: any[]) {
       }
       pollRound++;
     }
-    if (hasPollTimedout && pendingPolls.length > 0) {
-      throw Error('Polling status timed-out.');
-    }
   }
   catch (error) {
     console.log(`An error has occured while polling the status of compliance scans. \nError: ${error}.\nPending polls:`);
@@ -137,10 +130,5 @@ export async function pollForCompletion(pollLocations: any[]) {
       console.log(pendingPoll);
     });
     throw Error(error);
-  }
-  finally {
-    if (!hasPollTimedout) {
-      clearTimeout(pollTimeoutId);
-    }
   }
 }
