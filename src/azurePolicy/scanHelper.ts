@@ -40,6 +40,7 @@ async function triggerScan(scope: string, token: string): Promise<string> {
   return sendRequest(webRequest).then((response: WebResponse) => {
     if (response.headers['location']) {
       let pollLocation = response.headers['location'];
+      printPartitionedText(`Scan triggered successfully.\nPoll URL: ${pollLocation}`);
       return Promise.resolve(pollLocation);
     } else {
       return Promise.reject(`Location header missing in response.\nResponse body: ${JSON.stringify(response.body)}`);
@@ -81,7 +82,7 @@ export async function pollForCompletion(polls: ScanCompletionPoll[]) {
   printPartitionedText('Starting to poll for scan statuses. Polling details:');
   const token = await getAccessToken();
   polls.forEach(poll => {
-    console.log(`scope: ${poll.scope}, url: ${poll.location}`);
+    console.log(`scope: ${poll.scope}\nurl: ${poll.location}\n`);
   });
 
   let pendingPolls: ScanCompletionPoll[] = polls;

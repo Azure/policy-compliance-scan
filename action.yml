@@ -15,6 +15,10 @@ inputs:
     description: 'To skip generation of csv artifact'
     required: false
     default: false
+  wait:
+    description: 'Optional. Defaults to true. Depending on the breadth, the time taken for compliance scan can range from a few minutes to several hours. By default, the action will wait for the compliance scan to complete and succeed or fail based on the compliance state of resources. However, you can mark this input as false, in which case the action will trigger the compliance scan and succeed. The status of the triggered scan and the compliance state of resources would have to be then viewed in Azure portal.'
+    required: false
+    default: true
 runs:
   using: 'node12'
   main: 'lib/run.js'

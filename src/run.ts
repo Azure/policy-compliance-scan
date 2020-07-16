@@ -7,11 +7,14 @@ export async function run() {
     //Trigger on-demand policy scan
     let polls: ScanCompletionPoll[] = await triggerOnDemandScan();
 
-    //Polls and records successful non-compliant responses
-    await pollForCompletion(polls);
+    const waitForCompletion: boolean = core.getInput('wait') ? core.getInput('wait').toUpperCase() == 'TRUE' : false;
+    if (waitForCompletion) {
+      //Polls and records successful non-compliant responses
+      await pollForCompletion(polls);
 
-    //Generate compliance scan summary
-    await generateSummary();
+      //Generate compliance scan summary
+      await generateSummary();
+    }
   } catch (error) {
     core.setFailed(error.message);
   }
