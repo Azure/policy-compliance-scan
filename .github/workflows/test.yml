@@ -9,7 +9,7 @@ on: # rebuild any PRs and main branch changes
     branches:
       - main
       - 'releases/*'
-      -'dev/*'
+      - 'dev/*'
 
 jobs:
   build: # make sure build/ci works properly
