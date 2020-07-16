@@ -2,7 +2,7 @@ import * as exec from '@actions/exec';
 import * as io from '@actions/io';
 
 var azPath: string;
-//This will be takean as input from user
+//This will be taken as input from user
 const resource = "https://management.azure.com/";
 
 export async function getAccessToken(): Promise<string> {
