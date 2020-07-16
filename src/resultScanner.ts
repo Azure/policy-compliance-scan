@@ -1,12 +1,11 @@
 import * as core from '@actions/core';
 import { parseEnvNumber } from '@actions/artifact/lib/internal-utils';
-import { StatusCodes, WebRequest, WebResponse, sendRequest } from "./client";
-import { getAADToken } from './AzCLIAADTokenGenerator';
+import { WebRequest, WebResponse, sendRequest } from "./client";
 import * as fs from 'fs';
 import * as fileHelper from './fileHelper';
 import * as table from 'table';
 import { ignoreScope } from './ignoreResultHelper';
-import { printPartitionedText, sleep, printPartitionedDebugLog } from './Utility';
+import { sleep, printPartitionedDebugLog } from './Utility';
 
 const KEY_RESOURCE_ID = "resourceId";
 const KEY_POLICY_ASSG_ID = "policyAssignmentId";
@@ -78,7 +77,7 @@ function getPolicyEvaluationDetails(evalData : any) : any{
   return JSON.parse(finalVal);
 }
 
- export async function batchCall(batchUrl: string, batchMethod: string, batchRequests: any[], token: string): Promise<WebResponse> {
+export async function batchCall(batchUrl: string, batchMethod: string, batchRequests: any[], token: string): Promise<WebResponse> {
   let batchWebRequest = new WebRequest();
   batchWebRequest.method = batchMethod.length > 0 ? batchMethod :'POST';
   batchWebRequest.uri = batchUrl.length > 0 ? batchUrl : `https://management.azure.com/batch?api-version=2020-06-01` ;
@@ -133,7 +132,7 @@ function getPolicyEvaluationDetails(evalData : any) : any{
   return resultObj;
  }
 
- async function pollPendingResponses(pendingResponses: any[], token: string):Promise<any[]>{
+async function pollPendingResponses(pendingResponses: any[], token: string):Promise<any[]>{
   
   if(pendingResponses.length > 0){
     core.debug(`Polling requests # ${pendingResponses.length}  ==>`);
