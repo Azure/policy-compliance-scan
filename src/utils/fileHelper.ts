@@ -4,6 +4,7 @@ import * as core from '@actions/core';
 import * as os from 'os';
 import {create, UploadOptions} from '@actions/artifact';
 
+export const JSON_FILENAME = 'scanreport.json';
 let POLICY_SCAN_DIRECTORY = '';
 export const JSON_FILENAME = 'scanReport.json';
 export const CSV_FILENAME = 'ScanReport.csv';

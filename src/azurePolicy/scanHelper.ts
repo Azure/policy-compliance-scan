@@ -1,29 +1,31 @@
 import * as core from '@actions/core';
-import { StatusCodes, WebRequest, WebResponse, sendRequest } from "./client";
-import * as resultScanner from './resultScanner';
-import { printPartitionedText, printPartitionedDebugLog } from './Utility'
-import { getAccessToken } from './AzCLIAADTokenGenerator'
+import { StatusCodes, WebRequest, WebResponse, sendRequest } from "../utils/httpClient";
+import * as resultScanner from './evaluationHelper';
+import { printPartitionedText, printPartitionedDebugLog } from '../utils/utilities'
+import { getAccessToken } from '../auth/azAuthentication'
 
-export async function triggerOnDemandScan(): Promise<any[]> {
+export interface ScanCompletionPoll {
+  scope: string;
+  location: string;
+}
+
+export async function triggerOnDemandScan(): Promise<ScanCompletionPoll[]> {
   const token = await getAccessToken();
   const scopesInput = core.getInput('scopes');
   const scopes = scopesInput ? scopesInput.split('\n') : [];
 
-  let pollLocations: any[] = [];
+  let polls: ScanCompletionPoll[] = [];
   for (const scope of scopes) {
-    const pollLocation = await triggerScan(scope, token).catch(error => {
-      throw Error(error);
-    });
-
-    pollLocations.push({
+    const pollLocation = await triggerScan(scope, token);
+    polls.push({
       'scope': scope,
-      'pollLocation': pollLocation
+      'location': pollLocation
     });
   }
-  return pollLocations;
+  return polls;
 }
 
-export async function triggerScan(scope: string, token: string): Promise<string> {
+async function triggerScan(scope: string, token: string): Promise<string> {
   let triggerScanUrl = `https://management.azure.com${scope}/providers/Microsoft.PolicyInsights/policyStates/latest/triggerEvaluation?api-version=2019-10-01`;
 
   let webRequest = new WebRequest();
@@ -36,10 +38,8 @@ export async function triggerScan(scope: string, token: string): Promise<string>
 
   printPartitionedText(`Triggering scan. URL: ${triggerScanUrl}`);
   return sendRequest(webRequest).then((response: WebResponse) => {
-    //console.log('Response status code: ', response.statusCode);
     if (response.headers['location']) {
       let pollLocation = response.headers['location'];
-      //console.log('Successfully triggered scan. Poll location: ', pollLocation)
       return Promise.resolve(pollLocation);
     } else {
       return Promise.reject(`Location header missing in response.\nResponse body: ${JSON.stringify(response.body)}`);
@@ -59,9 +59,7 @@ async function isScanCompleted(pollUrl: string, token: string): Promise<boolean>
     'Content-Type': 'application/json; charset=utf-8'
   }
 
-  //console.log(`Polling for scan status. URL: ${pollUrl}`);
   return sendRequest(webRequest).then((response: WebResponse) => {
-    //console.log(`Response status code: ${response.statusCode}\n`);
     if (response.statusCode == StatusCodes.OK) {
       return Promise.resolve(true);
     } else if (response.statusCode == StatusCodes.ACCEPTED) {
@@ -79,25 +77,23 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export async function pollForCompletion(pollLocations: any[]) {
-  printPartitionedText('Starting to poll for scan statuses. Poll urls:');
+export async function pollForCompletion(polls: ScanCompletionPoll[]) {
+  printPartitionedText('Starting to poll for scan statuses. Polling details:');
   const token = await getAccessToken();
-  pollLocations.forEach(location => {
-    console.log(location.pollLocation);
+  polls.forEach(poll => {
+    console.log(`scope: ${poll.scope}, url: ${poll.location}`);
   });
 
-  let pendingPolls: any[] = pollLocations;
+  let pendingPolls: ScanCompletionPoll[] = polls;
 
-  let pollRound: number = 1;
   const pollInterval: number = 60 * 1000; // 60000ms = 1min
   try {
     printPartitionedText(`Poll interval (ms):: ${pollInterval}`);
     while (pendingPolls.length > 0) {
-      printPartitionedDebugLog(`Poll round: ${pollRound}, No. of pending polls: ${pendingPolls.length}`);
-      let pendingPollsNew: any[] = [];
-      let completedPolls: any[] = [];
+      let pendingPollsNew: ScanCompletionPoll[] = [];
+      let completedPolls: ScanCompletionPoll[] = [];
       for (const poll of pendingPolls) {
-        const isCompleted = await isScanCompleted(poll.pollLocation, token);
+        const isCompleted = await isScanCompleted(poll.location, token);
         if (isCompleted) {
           completedPolls.push(poll);
         }
@@ -121,7 +117,6 @@ export async function pollForCompletion(pollLocations: any[]) {
       if (remainingTime > 0 && pendingPolls.length > 0) {
         await sleep(remainingTime);
       }
-      pollRound++;
     }
   }
   catch (error) {

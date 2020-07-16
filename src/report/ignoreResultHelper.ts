@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import { printPartitionedText } from './Utility'
+import { printPartitionedText } from '../utils/utilities'
 
 export function ignoreScope(scope: string): boolean {
     if (!scope) {
