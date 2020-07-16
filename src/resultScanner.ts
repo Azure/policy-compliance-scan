@@ -110,8 +110,7 @@ export async function batchCall(batchUrl: string, batchMethod: string, batchRequ
   };
 
   resultObj.pendingResponses = receivedResponses.map((pendingResponse: any) => {
-    if (pendingResponse.statusCode == 200){
-      if(pendingResponse != null && pendingResponse.body != null){
+    if (pendingResponse.statusCode == 200 && pendingResponse != null && pendingResponse.body != null){
         let values = pendingResponse.body.responses ? pendingResponse.body.responses : pendingResponse.body.value;
         core.debug(`Saving ${values.length} scopes to result.`)
         values.forEach(response => {
@@ -121,7 +120,6 @@ export async function batchCall(batchUrl: string, batchMethod: string, batchRequ
             resultObj.responseNextPage.push({'scope' : response.content["@odata.nextLink"]  });
           }
         });
-      }
       return null;
     }
     else if(pendingResponse.statusCode == 202){ 
