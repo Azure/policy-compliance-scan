@@ -5,7 +5,8 @@
   "main": "run.js",
   "scripts": {
     "build": "tsc",
-    "test": "jest --coverage"
+    "test": "jest",
+    "test-coverage": "jest --coverage"
   },
   "repository": {
     "type": "git",

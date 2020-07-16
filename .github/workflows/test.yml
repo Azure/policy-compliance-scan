@@ -37,7 +37,7 @@ jobs:
         $count = 0; 
         foreach ($j in $coverage_result) 
         { 
-          if ($j.tostring().startswith("--------------")) 
+          if ($j.tostring().startswith("---------------------------|")) 
           { 
                 if (!$start) 
                 { 
