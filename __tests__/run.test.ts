@@ -106,7 +106,7 @@ test("printFormattedOutput - called with the result from scan report", async () 
 
     //Invoke and assert
     await expect(run()).resolves.not.toThrow();
-    expect(resultScannerMock.printFormattedOutput).toBeCalledWith([1,2,3],expect.anything(),expect.anything());
+    expect(resultScannerMock.printFormattedOutput).toBeCalledWith([1,2,3]);
 });
 
 
