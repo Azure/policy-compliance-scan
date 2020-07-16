@@ -3,14 +3,17 @@ import * as path from 'path';
 import * as core from '@actions/core';
 import * as os from 'os';
 import {create, UploadOptions} from '@actions/artifact';
-import * as resultScanner from './resultScanner';
 
 let POLICY_SCAN_DIRECTORY = '';
+export const JSON_FILENAME = 'scanReport.json';
+export const CSV_FILENAME = 'ScanReport.csv';
 
 export function getScanReportPath(): string {
-    //Creating intermediate file to store success records
-    const scanReportPath = `${getPolicyScanDirectory()}/${resultScanner.JSON_FILENAME}`;
-    fs.writeFileSync(scanReportPath, "");
+    const scanReportPath = `${getPolicyScanDirectory()}/${JSON_FILENAME}`;
+    //Creating intermediate file if it doesn't exist
+    if(!fs.existsSync(scanReportPath)){
+        fs.writeFileSync(scanReportPath, "");
+    }   
     return scanReportPath;
 }
 
@@ -90,6 +93,22 @@ export function getFilePath(name: string) {
     const filePath = path.join(tempDirectory, path.basename(name));
     return filePath;
 }
+
+export async function createCSV(data : any[], csvName: string){
+    try{
+      let fileName = csvName ? csvName : CSV_FILENAME;
+      let filePath = writeToCSVFile(data, fileName);
+      await uploadFile(
+        fileName,
+        filePath,
+        path.dirname(filePath)
+      );
+    }
+    catch (error) {
+      console.error(`An error has occured while writing to csv file : ${error}.`);
+    }
+  
+  }
 
 export async function uploadFile(fileName: string, filePath: string, rootDirectory: string): Promise<void> {
     try {

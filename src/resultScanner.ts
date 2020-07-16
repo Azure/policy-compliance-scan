@@ -5,9 +5,8 @@ import { getAADToken } from './AzCLIAADTokenGenerator';
 import * as fs from 'fs';
 import * as fileHelper from './fileHelper';
 import * as table from 'table';
-import {dirname} from 'path'
-import { ignoreScope } from './ignoreResultHelper'
-import { printPartitionedText, sleep, printPartitionedDebugLog } from './Utility'
+import { ignoreScope } from './ignoreResultHelper';
+import { printPartitionedText, sleep, printPartitionedDebugLog } from './Utility';
 
 const KEY_RESOURCE_ID = "resourceId";
 const KEY_POLICY_ASSG_ID = "policyAssignmentId";
@@ -27,10 +26,7 @@ const BATCH_MAX_SIZE = 500;
 const MAX_LOG_ROWS_VAR = 'MAX_LOG_ROWS';
 const DEFAULT_MAX_LOG_ROWS = 250;
 const BATCH_POLL_INTERVAL: number = 60 * 1000; // 1 min = 60 * 1000ms
-const POLL_TIMEOUT_DURATION: number = 5  * 60 * 1000;  //5 mins
-
-export const CSV_FILENAME = 'ScanReport.csv';
-export const JSON_FILENAME = 'scanReport.json';
+const BATCH_POLL_TIMEOUT_DURATION: number = 5  * 60 * 1000;  //5 mins
 
 const CONDITION_MAP = { 
   'containsKey' : 'Current value must contain the target value as a key.'	 ,
@@ -156,7 +152,7 @@ function getPolicyEvaluationDetails(evalData : any) : any{
   return pendingResponses;
  }
 
- export async function batchCalls(uri: string, method: string ,commonHeaders: any, polls: any[], token: string): Promise<any[]> {    
+ export async function computeBatchCalls(uri: string, method: string ,commonHeaders: any, polls: any[], token: string): Promise<any[]> {    
 
     let pendingPolls = polls;
     let requests : any = [];
@@ -201,7 +197,7 @@ function getPolicyEvaluationDetails(evalData : any) : any{
       
       //Evaluating all batch responses
       let hasPollTimedout: boolean = false;
-      let pollTimeoutId = setTimeout(() => { hasPollTimedout = true; }, POLL_TIMEOUT_DURATION);
+      let pollTimeoutId = setTimeout(() => { hasPollTimedout = true; }, BATCH_POLL_TIMEOUT_DURATION);
       
       pendingResponses.push(...batchResponses);
       
@@ -243,7 +239,7 @@ function getPolicyEvaluationDetails(evalData : any) : any{
     return Promise.resolve(finalResponses);
   }
 
-  export async function getScanResult(polls: any[], token: string) {
+  export async function saveScanResult(polls: any[], token: string) {
     let scanResults : any[] = [];
     let scopes : any = [];
     let resourceIds : string[] = [];
@@ -254,7 +250,7 @@ function getPolicyEvaluationDetails(evalData : any) : any{
     
     //First batch call
     printPartitionedDebugLog('First set of batch calls::');
-    await batchCalls(scanResultUrl,'POST', null, polls, token).then((responseList) => { 
+    await computeBatchCalls(scanResultUrl,'POST', null, polls, token).then((responseList) => { 
       responseList.forEach(resultsObject => {
         if(resultsObject.httpStatusCode == 200){
           resourceIds.push(...(resultsObject.content.value
@@ -273,7 +269,7 @@ function getPolicyEvaluationDetails(evalData : any) : any{
     core.debug("Unique scopes length : " + scopes.length); 
 
     printPartitionedDebugLog('Second set of batch calls::');
-    await batchCalls(policyEvalUrl,'POST', null, scopes, token).then((responseList) => {   
+    await computeBatchCalls(policyEvalUrl,'POST', null, scopes, token).then((responseList) => {   
       responseList.forEach(resultsObject => {
         if(resultsObject.httpStatusCode == 200){
 
@@ -306,7 +302,7 @@ function getPolicyEvaluationDetails(evalData : any) : any{
     //Writing to file non-compliant records from every successful poll, for every poll-round
     try {
       if(scanResults.length > 0){
-        const scanReportPath = `${fileHelper.getPolicyScanDirectory()}/${JSON_FILENAME}`;
+        const scanReportPath = fileHelper.getScanReportPath();
         fs.appendFileSync(scanReportPath, JSON.stringify(scanResults, null, 2));
       }
     }
@@ -413,18 +409,3 @@ function getPolicyEvaluationDetails(evalData : any) : any{
     return csvRows;
   }
 
-export async function createCSV(data : any[], csvName: string){
-    try{
-      let fileName = csvName ? csvName : CSV_FILENAME;
-      let filePath = fileHelper.writeToCSVFile(data, fileName);
-      await fileHelper.uploadFile(
-        fileName,
-        filePath,
-        dirname(filePath)
-      );
-    }
-    catch (error) {
-      console.error(`An error has occured while writing to csv file : ${error}.`);
-    }
-  
-  }

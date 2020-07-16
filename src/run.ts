@@ -10,8 +10,8 @@ export async function run() {
     //Trigger on-demand policy scan
     let pollLocations: any[] = [];
     await triggerOnDemandScan().then(locations => pollLocations = locations);
-
-    //Get intermediate file path to store success records
+    
+    //Temp-file path to store successful results.
     const scanReportPath = fileHelper.getScanReportPath();
 
     //Polls and records successful non-compliant responses
@@ -30,7 +30,7 @@ export async function run() {
       const skipArtifacts = core.getInput('skip-artifacts') == 'true' ? true : false;
       if (!skipArtifacts) {
         const csvName = core.getInput('csv-name') + ".csv";
-        await resultScanner.createCSV(csv_object, csvName);
+        await fileHelper.createCSV(csv_object, csvName);
       }
       throw Error("1 or more resources were non-compliant");
     }

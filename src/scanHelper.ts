@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import { StatusCodes, WebRequest, WebResponse, sendRequest } from "./client";
 import * as resultScanner from './resultScanner';
-import { printPartitionedText } from './Utility'
+import { printPartitionedText, printPartitionedDebugLog } from './Utility'
 import { getAccessToken } from './AzCLIAADTokenGenerator'
 
 export async function triggerOnDemandScan(): Promise<any[]> {
@@ -93,7 +93,7 @@ export async function pollForCompletion(pollLocations: any[]) {
   try {
     printPartitionedText(`Poll interval (ms):: ${pollInterval}`);
     while (pendingPolls.length > 0) {
-      printPartitionedText(`Poll round: ${pollRound}, No. of pending polls: ${pendingPolls.length}`);
+      printPartitionedDebugLog(`Poll round: ${pollRound}, No. of pending polls: ${pendingPolls.length}`);
       let pendingPollsNew: any[] = [];
       let completedPolls: any[] = [];
       for (const poll of pendingPolls) {
@@ -111,10 +111,10 @@ export async function pollForCompletion(pollLocations: any[]) {
       let startTime: Date = new Date();
       let endTime: Date = new Date();
       if (completedPolls.length > 0) {
-        //printPartitionedText(`Results saving ...`);
-        await resultScanner.getScanResult(completedPolls, token);
+        printPartitionedDebugLog(`Results saving ...`);
+        await resultScanner.saveScanResult(completedPolls, token);
         endTime = new Date();
-        //printPartitionedText(`Results saved. Time taken in ms:: ${endTime.getTime() - startTime.getTime()}`);
+        printPartitionedDebugLog(`Results saved. Time taken in ms:: ${endTime.getTime() - startTime.getTime()}`);
       }
       let remainingTime = pollInterval - (endTime.getTime() - startTime.getTime());
       //If time remains after storing success results then wait for it till the pollinterval is over
