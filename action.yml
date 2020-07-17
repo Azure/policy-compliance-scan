@@ -1,22 +1,22 @@
-name: 'AzPac'
-description: 'Azure policy as code action'
+name: 'policy-compliance-scan'
+description: 'Triggers compliance scan on Azure resources and fails/passes based on the compliance state of the resources'
 inputs: 
-  scopes: # id of input
-    description: 'Scopes to perform scanning on'
+  scopes: 
+    description: 'TList of resource identifiers for which compliance scan will be triggered'
     required: true
-  ignore-result:
+  scopes-ignore:
     description: 'List of resource identifiers for which compliance results will be ignored. Action will continue irrespective of their compliance state'
     required: false
-  csv-name:
-    description: 'Name of csv to be generated'
+  report-name:
+    description: 'Name of CSV file that contains the report of non-compliant resources. This is uploaded as an artifact in the workflow run'
     required: false
-    default: ScanResults
-  skip-artifacts:
-    description: 'To skip generation of csv artifact'
+    default: policy-compliance-scan
+  skip-report:
+    description: 'Allows you to skip generation and upload of CSV file'
     required: false
     default: false
   wait:
-    description: 'Optional. Defaults to true. Depending on the breadth, the time taken for compliance scan can range from a few minutes to several hours. By default, the action will wait for the compliance scan to complete and succeed or fail based on the compliance state of resources. However, you can mark this input as false, in which case the action will trigger the compliance scan and succeed. The status of the triggered scan and the compliance state of resources would have to be then viewed in Azure portal.'
+    description: 'If set to true, the action will wait till the scan is complete and pass/fail based on the compliance state of resources. If set to false, the action will trigger compliance scan and immediately pass without waiting for scan completion'
     required: false
     default: true
 runs:
