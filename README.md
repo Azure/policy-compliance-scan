@@ -1,5 +1,5 @@
 
-# [README IN PROGRESS]
+# [DOC IN PROGRESS]
 
 # GitHub Action for Azure Policy Compliance Scan
 
@@ -11,9 +11,9 @@ The definition of this Github Action is in [action.yml](https://github.com/Azure
 
 # Inputs for the Action
 
-* `scopes`: mandatory. Takes a full identifier for one or more azure resources, resource groups or subscriptions. The on-demand policy compliance scan is triggered for all of these. The resource ID or the subscription ID can generally be found in the properties section of the resource in Azure Portal.
-* `scopes-ignore`:[edit] Optional. <add link to policy scope doc > Takes full identifier for one or more azure resources, resource groups. If the resources are found non-compliant after the scan completion, the action fails. However, in this input you can specify resources or resource groups for which the compliance state will be ignored. The action will pass irrespective of the compliance state of these resources.  In case you want the action to always pass irrespective of the compliance state of resources, you can set its value as 'all'. 
-* `wait`: Optional. <link to activity log documentation> Defaults to true. Depending on the breadth, the time taken for compliance scan can range from a few minutes to several hours. By default, the action will wait for the compliance scan to complete and succeed or fail based on the compliance state of resources. However, you can mark this input as false, in which case the action will trigger the compliance scan and succeed immediately. The status of the triggered scan and the compliance state of resources would have to be then viewed in Azure portal. 
+* `scopes`: mandatory. Takes a full identifier for one or more azure resources, resource groups or subscriptions. The on-demand policy compliance scan is triggered for all of these. The identifier(resource ID or the subscription ID) can generally be found in the properties section of the resource in Azure Portal.
+* `scopes-ignore`: Optional. Takes full identifier for one or more azure resources, resource groups. If the resources are found non-compliant after the scan completion, the action fails. However, in this input you can specify resources or resource groups for which the compliance state will be ignored. The action will pass irrespective of the compliance state of these resources.  In case you want the action to always pass irrespective of the compliance state of resources, you can set its value as 'all'. 
+* `wait`: Optional. Depending on the breadth, the time taken for compliance scan can range from a few minutes to several hours. By default, the action will wait for the compliance scan to complete and succeed or fail based on the compliance state of resources. However, you can mark this input as false, in which case the action will trigger the compliance scan and succeed immediately. The status of the triggered scan and the compliance state of resources would have to be then viewed in [activity log](https://docs.microsoft.com/en-us/azure/azure-monitor/platform/activity-log) of the resource in Azure portal. 
 * `skip-report`: Optional. Defaults to false. If false, the action will upload a CSV file containing a list of resources that are non-compliant after the triggered scan is complete. The CSV file can be downloaded as an artifact from the workflow run for manual analysis. Note that the number of rows in CSV are capped at 100,000. 
 * `report-name`: Optional. Defaults to abc-10July2020-1354[TODO] The filename for the CSV to be uploaded. Ignored if skip-report is set to true.
 
@@ -48,12 +48,12 @@ jobs:
     - name: Check for resource compliance
       uses: azure/policy-compliance-scan@v0
       with:
-        resource: 
+        scopes: 
         - /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/
         
 ```
-The above workflow will trigger a policy compliance scan on the provided subscription, wait till the scan is complete, fetch the latest compliance state of resources and upload a CSV file containing the list of non compliant resources and the associated policy assignments. The action will fail if there are any non-compliant resources
-[TODO] Add how to find subscription from ui.
+The above workflow will trigger a policy compliance scan on the provided subscription, wait till the scan is complete, fetch the latest compliance state of resources and upload a CSV file containing the list of non compliant resources and the associated policy assignments. The action will fail if there are any non-compliant resources.
+
 
 
 ### Sample workflow to trigger a scan on a resource group and ignore compliance state of an individual resource
@@ -77,9 +77,9 @@ jobs:
     - name: Check for resource compliance
       uses: azure/policy-compliance-scan@v0
       with:
-        resource: 
+        scopes: 
         - /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/QA               
-        ignore:
+        scopes-ignore:
         - /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/QA/providers/Microsoft.Web/sites/demoApp
         
 ```
@@ -107,7 +107,7 @@ jobs:
     - name: Check for resource compliance
       uses: azure/policy-compliance-scan@v0
       with:
-        resource: 
+        scopes: 
         - /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/
         wait: false
     - run: |
