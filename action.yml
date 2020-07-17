@@ -2,7 +2,7 @@ name: 'policy-compliance-scan'
 description: 'Triggers compliance scan on Azure resources and fails/passes based on the compliance state of the resources'
 inputs: 
   scopes: 
-    description: 'TList of resource identifiers for which compliance scan will be triggered'
+    description: 'List of resource identifiers for which compliance scan will be triggered.'
     required: true
   scopes-ignore:
     description: 'List of resource identifiers for which compliance results will be ignored. Action will continue irrespective of their compliance state'
@@ -12,7 +12,7 @@ inputs:
     required: false
     default: policy-compliance-scan
   skip-report:
-    description: 'Allows you to skip generation and upload of CSV file'
+    description: 'Allows you to skip the generation and upload of CSV file'
     required: false
     default: false
   wait:
