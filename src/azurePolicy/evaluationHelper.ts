@@ -133,7 +133,7 @@ async function pollPendingResponses(pendingResponses: any[], token: string): Pro
     if(pendingResponses && pendingResponses.length > 0) {
       core.debug(`Polling requests # ${pendingResponses.length}  ==>`);
       await sleep(BATCH_POLL_INTERVAL); // Delay before next poll
-      return await Promise.all(pendingResponses.map(async (pendingResponse: any) => {
+      pendingResponses = await Promise.all(pendingResponses.map(async (pendingResponse: any) => {
         return await batchCall(pendingResponse.headers.location, 'GET', [], token).then(response => {
           if (response.statusCode == 200) { //Will be saved in next iteration
             return response;
