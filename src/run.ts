@@ -4,6 +4,13 @@ import { pollForCompletion, ScanCompletionPoll, triggerOnDemandScan } from './az
 
 export async function run() {
   try {
+    // Validate scope input before proceeding
+    const scopesInput = core.getInput('scopes');
+    if (!scopesInput) {
+      core.setFailed('No scopes supplied for scanning.');
+      return;
+    }
+
     //Trigger on-demand policy scan
     let polls: ScanCompletionPoll[] = await triggerOnDemandScan();
 
