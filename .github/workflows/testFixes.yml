@@ -1,5 +1,4 @@
-name: Test fixes batch call response 2
-on:
+name: Test fixes
   push:
     branches: 
       - dev/v0
