@@ -96,7 +96,7 @@ function processCreatedResponses(receivedResponses: any[], token: string): any {
       values = pendingResponse.body.responses ? pendingResponse.body.responses : pendingResponse.body.value;
       let nextPageLink = pendingResponse.body.nextLink;
       while( nextPageLink !=null) {
-        let batchResponseNextPageUrl = pendingResponse.body.nextLink;
+        let batchResponseNextPageUrl = pendingResponse.body.nextLink ? pendingResponse.body.nextLink : null;
         let webRequest = new WebRequest();
         webRequest.method = 'GET';
         webRequest.uri = batchResponseNextPageUrl;
@@ -197,13 +197,14 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
 
     try {
       //Run until all batch-responses are CREATED
-      while (pendingResponses.length > 0 && !hasPollTimedout) {
+      while (pendingResponses && pendingResponses.length > 0 && !hasPollTimedout) {
         //Polling remaining batch-responses with status = ACCEPTED
         await pollPendingResponses(pendingResponses, token).then(pollingResponses => {
+          pendingResponses = new Array();
           pendingResponses = pollingResponses.filter(response => {return response.statusCode == 202});
           completedResponses.push(...pollingResponses.filter(response => {return response.statusCode == 200}));
         })
-        if (hasPollTimedout && pendingResponses.length > 0) {
+        if (hasPollTimedout && pendingResponses && pendingResponses.length > 0) {
           throw Error('Polling status timed-out.');
         }
       }
