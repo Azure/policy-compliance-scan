@@ -53,7 +53,7 @@ async function triggerScan(scope: string, token: string): Promise<string> {
         return Promise.reject(`Location header missing in response.\nResponse body: ${JSON.stringify(response.body)}`);
       }
     } else {
-      return Promise.reject(`An error occured while triggering policy compliance scan. Scope: ${scope}, StatusCode: ${response.statusCode}, Response body: ${JSON.stringify(response.body)}`);
+      return Promise.reject(`Some error occured. Scope: ${scope}, StatusCode: ${response.statusCode}, Response body: ${JSON.stringify(response.body)}`);
     }
   }).catch(error => {
     console.log('An error occured while triggering the scan. Error: ', error);
