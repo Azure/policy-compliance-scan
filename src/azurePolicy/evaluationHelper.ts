@@ -61,13 +61,13 @@ function getPolicyEvaluationDetails(evalData: any): any {
 
 export async function batchCall(batchUrl: string, batchMethod: string, batchRequests: any[], token: string): Promise<WebResponse> {
   let batchWebRequest = new WebRequest();
-  batchWebRequest.method = batchMethod.length > 0 ? batchMethod : 'POST';
-  batchWebRequest.uri = batchUrl.length > 0 ? batchUrl : `https://management.azure.com/batch?api-version=2020-06-01`;
+  batchWebRequest.method = (batchMethod && batchMethod.length > 0) ? batchMethod : 'POST';
+  batchWebRequest.uri = (batchUrl && batchUrl.length > 0) ? batchUrl : `https://management.azure.com/batch?api-version=2020-06-01`;
   batchWebRequest.headers = {
     'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json; charset=utf-8'
   }
-  batchWebRequest.body = batchRequests.length > 0 ? JSON.stringify({ 'requests': batchRequests }) : "";
+  batchWebRequest.body = (batchRequests && batchRequests.length > 0) ? JSON.stringify({ 'requests': batchRequests }) : "";
 
   core.debug(`Batch request :: Batch URL: ${batchWebRequest.uri} # Requests: ${batchRequests.length}`);
   if (batchRequests.length > 0) {
@@ -84,32 +84,26 @@ export async function batchCall(batchUrl: string, batchMethod: string, batchRequ
   });
 }
 
-function processCreatedResponses(receivedResponses: any[], token: string): any {
+async function processCreatedResponses(receivedResponses: any[], token: string): Promise<any> {
   let resultObj = {
     finalResponses: new Array(),
     responseNextPage: new Array()
   };
   let values = new Array();
 
-  receivedResponses.map((pendingResponse: any) => {
+  await Promise.all(receivedResponses.map(async (pendingResponse: any) => {
     if (pendingResponse.statusCode == 200 && pendingResponse != null && pendingResponse.body != null) {
       values = pendingResponse.body.responses ? pendingResponse.body.responses : pendingResponse.body.value;
       let nextPageLink = pendingResponse.body.nextLink;
       while( nextPageLink !=null) {
-        let batchResponseNextPageUrl = pendingResponse.body.nextLink ? pendingResponse.body.nextLink : null;
-        let webRequest = new WebRequest();
-        webRequest.method = 'GET';
-        webRequest.uri = batchResponseNextPageUrl;
-        webRequest.headers = {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json; charset=utf-8'
-        }
-        sendRequest(webRequest).then((responsesNextPage: WebResponse) => {
-          if(responsesNextPage.body.value){
-            values.push(...responsesNextPage.body.value);
-            nextPageLink = responsesNextPage.body.nextLink;
-          }
+        let responsesNextPage;
+        await batchCall(nextPageLink, 'GET', [], token).then(response => {
+          responsesNextPage = response;
         });
+        if(responsesNextPage.body.value){
+          values.push(...responsesNextPage.body.value);
+          nextPageLink = responsesNextPage.body.nextLink ? responsesNextPage.body.nextLink : null;
+        }
       }
 
       core.debug(`Saving ${values.length} rows to result.`)
@@ -121,14 +115,14 @@ function processCreatedResponses(receivedResponses: any[], token: string): any {
         }
       });
     }
-  });
+  }));
 
   return resultObj;
 }
 
 async function pollPendingResponses(pendingResponses: any[], token: string): Promise<any[]> {
 
-  if (pendingResponses.length > 0) {
+  if(pendingResponses && pendingResponses.length > 0) {
     core.debug(`Polling requests # ${pendingResponses.length}  ==>`);
     await sleep(BATCH_POLL_INTERVAL); // Delay before next poll
     return await Promise.all(pendingResponses.map(async (pendingResponse: any) => {
