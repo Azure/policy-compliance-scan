@@ -124,11 +124,12 @@ export async function pollForCompletion(polls: ScanCompletionPoll[]) {
       let endTime: Date = new Date();
       if (completedPolls.length > 0) {
         printPartitionedDebugLog(`Results saving ...`);
-        await resultScanner.saveScanResult(completedPolls, token);
-        endTime = new Date();
-        printPartitionedDebugLog(`Results saved. Time taken in ms:: ${endTime.getTime() - startTime.getTime()}`);
+        await resultScanner.saveScanResult(completedPolls, token).then(() => {
+          endTime = new Date();
+          printPartitionedDebugLog(`Results saved. Time taken in ms:: ${endTime.valueOf() - startTime.valueOf()}`);
+        });
       }
-      let remainingTime = pollInterval - (endTime.getTime() - startTime.getTime());
+      let remainingTime = pollInterval - (endTime.valueOf() - startTime.valueOf());
       //If time remains after storing success results then wait for it till the pollinterval is over
       if (remainingTime > 0 && pendingPolls.length > 0) {
         await sleep(remainingTime);
