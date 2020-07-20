@@ -32,7 +32,7 @@ export async function generateSummary(): Promise<void> {
 
   if (nonCompliantResources != null && nonCompliantResources.length > 0) {
     //Console print and csv publish
-    printPartitionedText('Policy compliance scan report::');
+    printPartitionedText(`Policy compliance scan report:: Total records : ${nonCompliantResources}`);
     let csv_object = printFormattedOutput(nonCompliantResources);
     const skipArtifacts = core.getInput('skip-artifacts').toLowerCase() == 'true' ? true : false;
     if (!skipArtifacts) {

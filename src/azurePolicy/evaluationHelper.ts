@@ -61,13 +61,13 @@ function getPolicyEvaluationDetails(evalData: any): any {
 
 export async function batchCall(batchUrl: string, batchMethod: string, batchRequests: any[], token: string): Promise<WebResponse> {
   let batchWebRequest = new WebRequest();
-  batchWebRequest.method = batchMethod.length > 0 ? batchMethod : 'POST';
-  batchWebRequest.uri = batchUrl.length > 0 ? batchUrl : `https://management.azure.com/batch?api-version=2020-06-01`;
+  batchWebRequest.method = (batchMethod && batchMethod.length > 0) ? batchMethod : 'POST';
+  batchWebRequest.uri = (batchUrl && batchUrl.length > 0) ? batchUrl : `https://management.azure.com/batch?api-version=2020-06-01`;
   batchWebRequest.headers = {
     'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json; charset=utf-8'
   }
-  batchWebRequest.body = batchRequests.length > 0 ? JSON.stringify({ 'requests': batchRequests }) : "";
+  batchWebRequest.body = (batchRequests && batchRequests.length > 0) ? JSON.stringify({ 'requests': batchRequests }) : "";
 
   core.debug(`Batch request :: Batch URL: ${batchWebRequest.uri} # Requests: ${batchRequests.length}`);
   if (batchRequests.length > 0) {
@@ -84,64 +84,73 @@ export async function batchCall(batchUrl: string, batchMethod: string, batchRequ
   });
 }
 
-function processCreatedResponses(receivedResponses: any[], token: string): any {
-  let resultObj = {
-    finalResponses: new Array(),
-    responseNextPage: new Array()
-  };
-
-  receivedResponses.map((pendingResponse: any) => {
-    if (pendingResponse.statusCode == 200 && pendingResponse != null && pendingResponse.body != null) {
-      let values = pendingResponse.body.responses ? pendingResponse.body.responses : pendingResponse.body.value;
-      let nextPageLink = pendingResponse.body.nextLink;
-      while( nextPageLink !=null) {
-        let batchResponseNextPageUrl = pendingResponse.body.nextLink;
-        let webRequest = new WebRequest();
-        webRequest.method = 'GET';
-        webRequest.uri = batchResponseNextPageUrl;
-        webRequest.headers = {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json; charset=utf-8'
-        }
-        sendRequest(webRequest).then((responsesNextPage: WebResponse) => {
+async function processCreatedResponses(receivedResponses: any[], token: string): Promise<any> {
+  let finalResponses: any = [];
+  let responseNextPage: any = [];
+  
+  let values = new Array();
+  try{
+    await Promise.all(receivedResponses.map(async (pendingResponse: any) => {
+      if (pendingResponse.statusCode == 200 && pendingResponse != null && pendingResponse.body != null) {
+        values = pendingResponse.body.responses ? pendingResponse.body.responses : pendingResponse.body.value;
+        let nextPageLink = pendingResponse.body.nextLink;
+        while( nextPageLink !=null) {
+          let responsesNextPage;
+          await batchCall(nextPageLink, 'GET', [], token).then(response => {
+            responsesNextPage = response;
+          });
           if(responsesNextPage.body.value){
             values.push(...responsesNextPage.body.value);
-            nextPageLink = responsesNextPage.body.nextLink;
+            nextPageLink = responsesNextPage.body.nextLink ? responsesNextPage.body.nextLink : null;
+          }
+        }
+
+        core.debug(`Saving ${values.length} resourceIds to result.`)
+        values.forEach(response => {
+          finalResponses.push(response); //Saving to final response array
+          //Will be called in next set of batch calls to get the paginated responses for each request within batch call
+          if (response.content["@odata.nextLink"] != null) {
+            responseNextPage.push({ 'scope': response.content["@odata.nextLink"] });
           }
         });
       }
-
-      core.debug(`Saving ${values.length} rows to result.`)
-      values.forEach(response => {
-        resultObj.finalResponses.push(response); //Saving to final response array
-        //Will be called in next set of batch calls to get the paginated responses for each request within batch call
-        if (response.content["@odata.nextLink"] != null) {
-          resultObj.responseNextPage.push({ 'scope': response.content["@odata.nextLink"] });
-        }
-      });
+    }));
+  }
+  catch (error) {
+    return Promise.reject(`Error in getting batch response pages. ${error}`);
+  }
+  finally {
+    let resultObj = {
+      finalResponses: finalResponses,
+      responseNextPage: responseNextPage
     }
-  });
-
-  return resultObj;
+    return resultObj;
+  }
 }
 
 async function pollPendingResponses(pendingResponses: any[], token: string): Promise<any[]> {
-
-  if (pendingResponses.length > 0) {
-    core.debug(`Polling requests # ${pendingResponses.length}  ==>`);
-    await sleep(BATCH_POLL_INTERVAL); // Delay before next poll
-    return await Promise.all(pendingResponses.map(async (pendingResponse: any) => {
-      return await batchCall(pendingResponse.headers.location, 'GET', [], token).then(response => {
-        if (response.statusCode == 200) { //Will be saved in next iteration
-          return response;
-        }
-        if (response.statusCode == 202) { //Will be polled in next iteration
-          return pendingResponse;
-        }
-      });
-    }));
+  try{
+    if(pendingResponses && pendingResponses.length > 0) {
+      core.debug(`Polling requests # ${pendingResponses.length}  ==>`);
+      await sleep(BATCH_POLL_INTERVAL); // Delay before next poll
+      return await Promise.all(pendingResponses.map(async (pendingResponse: any) => {
+        return await batchCall(pendingResponse.headers.location, 'GET', [], token).then(response => {
+          if (response.statusCode == 200) { //Will be saved in next iteration
+            return response;
+          }
+          if (response.statusCode == 202) { //Will be polled in next iteration
+            return pendingResponse;
+          }
+        });
+      }));
+    }
   }
-  return pendingResponses;
+  catch (error) {
+    return Promise.reject(`${error}`);
+  }
+  finally {
+    return pendingResponses;
+  }
 }
 
 export async function computeBatchCalls(uri: string, method: string, commonHeaders: any, polls: any[], token: string): Promise<any[]> {
@@ -192,17 +201,19 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
     let hasPollTimedout: boolean = false;
     let pollTimeoutId = setTimeout(() => { hasPollTimedout = true; }, BATCH_POLL_TIMEOUT_DURATION);
 
-    pendingResponses.push(...batchResponses);
+    pendingResponses = batchResponses.filter(response => {return response.statusCode == 202});
+    completedResponses.push(...batchResponses.filter(response => {return response.statusCode == 200}));
 
     try {
       //Run until all batch-responses are CREATED
-      while (pendingResponses.length > 0 && !hasPollTimedout) {
+      while (pendingResponses && pendingResponses.length > 0 && !hasPollTimedout) {
         //Polling remaining batch-responses with status = ACCEPTED
         await pollPendingResponses(pendingResponses, token).then(pollingResponses => {
+          pendingResponses = new Array();
           pendingResponses = pollingResponses.filter(response => {return response.statusCode == 202});
           completedResponses.push(...pollingResponses.filter(response => {return response.statusCode == 200}));
         })
-        if (hasPollTimedout && pendingResponses.length > 0) {
+        if (hasPollTimedout && pendingResponses && pendingResponses.length > 0) {
           throw Error('Polling status timed-out.');
         }
       }
@@ -217,9 +228,17 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
     }
 
     //Saving CREATED responses 
-    let intermediateResult: any = processCreatedResponses(completedResponses, token);
-    finalResponses.push(...intermediateResult.finalResponses);
-    pendingPolls.push(...intermediateResult.responseNextPage); //For getting paginated responses
+    let intermediateResult: any;
+    try{
+      await processCreatedResponses(completedResponses, token).then(response => {
+        intermediateResult = response;
+        finalResponses.push(...intermediateResult.finalResponses);
+        pendingPolls.push(...intermediateResult.responseNextPage); //For getting paginated responses
+      });
+    }
+    catch (error) {
+      return Promise.reject(`Error in saving results to final array. ${error}`);
+    }
 
     uri = "${scope}";
     requests = [];
