@@ -85,10 +85,9 @@ export async function batchCall(batchUrl: string, batchMethod: string, batchRequ
 }
 
 async function processCreatedResponses(receivedResponses: any[], token: string): Promise<any> {
-  let resultObj = {
-    finalResponses: new Array(),
-    responseNextPage: new Array()
-  };
+  let finalResponses: any = [];
+  let responseNextPage: any = [];
+  
   let values = new Array();
 
   await Promise.all(receivedResponses.map(async (pendingResponse: any) => {
@@ -108,15 +107,19 @@ async function processCreatedResponses(receivedResponses: any[], token: string):
 
       core.debug(`Saving ${values.length} rows to result.`)
       values.forEach(response => {
-        resultObj.finalResponses.push(response); //Saving to final response array
+        finalResponses.push(response); //Saving to final response array
         //Will be called in next set of batch calls to get the paginated responses for each request within batch call
         if (response.content["@odata.nextLink"] != null) {
-          resultObj.responseNextPage.push({ 'scope': response.content["@odata.nextLink"] });
+          responseNextPage.push({ 'scope': response.content["@odata.nextLink"] });
         }
       });
     }
   }));
 
+  let resultObj = {
+    finalResponses: finalResponses,
+    responseNextPage: responseNextPage
+  }
   return resultObj;
 }
 
