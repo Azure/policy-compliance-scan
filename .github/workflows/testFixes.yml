@@ -20,7 +20,4 @@ jobs:
         uses: Josh-01/policy-compliance-scan@dev/v0
         with:
           scopes: |
-            /subscriptions/c00d16c7-6c1f-4c03-9be1-6934a4c49682/resourceGroups/az-pac-dev
-          ignore-result: |
-            /subscriptions/c00d16c7-6c1f-4c03-9be1-6934a4c49682/resourcegroups/aj-rg/providers/microsoft.containerservice/managedclusters/ajakscluster3
-            /subscriptions/c00d16c7-6c1f-4c03-9be1-6934a4c49682/resourcegroups/az-pac-dev/providers/microsoft.web/sites/azpacwebappone/
+            /subscriptions/c00d16c7-6c1f-4c03-9be1-6934a4c49682/resourceGroups/az-pac-dev/providers/microsoft.web/sites/azpacwebappone/
