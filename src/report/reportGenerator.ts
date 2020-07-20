@@ -144,7 +144,7 @@ export function printFormattedOutput(data: any[]): any[] {
   return csvRows;
 }
 
-async function createCSV(data: any[], csvName: string) {
+export async function createCSV(data: any[], csvName: string) {
   try {
     let fileName = csvName ? csvName : CSV_FILENAME;
     let filePath = fileHelper.writeToCSVFile(data, fileName);

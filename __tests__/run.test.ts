@@ -5,7 +5,8 @@ import { mocked } from 'ts-jest/utils';
 import * as scanHelper from '../src/azurePolicy/scanHelper'
 import * as fileHelper from '../src/utils/fileHelper'
 import * as client from '../src/utils/httpClient'
-import * as resultScanner from '../src/azurePolicy/evaluationHelper';
+import * as evaluationHelper from '../src/azurePolicy/evaluationHelper';
+import * as reportGenerator from '../src/report/reportGenerator';
 
 const mockedFileHelper = require('../src/fileHelper');
 mockedFileHelper.getPolicyScanDirectory = jest.fn().mockImplementation(() => { return 'test/_temp/containerscan_123'; });
@@ -15,7 +16,8 @@ const tokenGeneratorMock = mocked(tokenGenerator, true);
 const clientMock = mocked(client, true);
 const fileHelperMock = mocked(fileHelper, true);
 const scanHelperMock = mocked(scanHelper, true);
-const resultScannerMock = mocked(resultScanner, true);
+const evaluationHelperMock = mocked(evaluationHelper, true);
+const reportGeneratorMock = mocked(reportGenerator, true);
 
 test("triggerScan() - correct scope uri is triggered", async () => {
     let scopes = '/scope';
@@ -97,12 +99,12 @@ test("printFormattedOutput - called with the result from scan report", async () 
     scanHelperMock.pollForCompletion = jest.fn().mockResolvedValue('');
     fileHelperMock.getScanReportPath = jest.fn().mockReturnValue('');
     fileHelperMock.getFileJson = jest.fn().mockReturnValue([1, 2, 3]);
-    resultScannerMock.printFormattedOutput = jest.fn().mockReturnValue([5, 6, 7]);
-    fileHelperMock.createCSV = jest.fn();
+    reportGeneratorMock.printFormattedOutput = jest.fn().mockReturnValue([5, 6, 7]);
+    reportGeneratorMock.createCSV = jest.fn();
 
     //Invoke and assert
     await expect(run()).resolves.not.toThrow();
-    expect(resultScannerMock.printFormattedOutput).toBeCalledWith([1, 2, 3]);
+    expect(reportGeneratorMock.printFormattedOutput).toBeCalledWith([1, 2, 3]);
 });
 
 
@@ -114,12 +116,12 @@ test("createCSV - to be called when skip-artifacts is false", async () => {
     scanHelperMock.pollForCompletion = jest.fn().mockResolvedValue('');
     fileHelperMock.getScanReportPath = jest.fn().mockReturnValue('');
     fileHelperMock.getFileJson = jest.fn().mockReturnValue([1, 2, 3]);
-    resultScannerMock.printFormattedOutput = jest.fn().mockReturnValue([5, 6, 7]);
-    fileHelperMock.createCSV = jest.fn();
+    reportGeneratorMock.printFormattedOutput = jest.fn().mockReturnValue([5, 6, 7]);
+    reportGeneratorMock.createCSV = jest.fn();
 
     //Invoke and assert
     await expect(run()).resolves.not.toThrow();
-    expect(fileHelperMock.createCSV).toBeCalled();
+    expect(reportGeneratorMock.createCSV).toBeCalled();
 });
 
 test("createCSV - not to be called when skip-artifacts is true", async () => {
@@ -135,10 +137,10 @@ test("createCSV - not to be called when skip-artifacts is true", async () => {
     scanHelperMock.pollForCompletion = jest.fn().mockResolvedValue('');
     fileHelperMock.getScanReportPath = jest.fn().mockReturnValue('');
     fileHelperMock.getFileJson = jest.fn().mockReturnValue([1, 2, 3]);
-    resultScannerMock.printFormattedOutput = jest.fn().mockReturnValue([5, 6, 7]);
-    fileHelperMock.createCSV = jest.fn();
+    reportGeneratorMock.printFormattedOutput = jest.fn().mockReturnValue([5, 6, 7]);
+    reportGeneratorMock.createCSV = jest.fn();
 
     //Invoke and assert
     await expect(run()).resolves.not.toThrow();
-    expect(fileHelperMock.createCSV).toBeCalledTimes(0);
+    expect(reportGeneratorMock.createCSV).toBeCalledTimes(0);
 });
