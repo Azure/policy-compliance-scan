@@ -1,0 +1,26 @@
+name: Test fixes
+on:
+  push:
+    branches: 
+      - master
+    paths:
+      - .github/workflows/testFixes.yml
+jobs:
+  build:
+    name: AzPac
+    runs-on: ubuntu-latest
+    steps:          
+      - name: Login via Az module
+        continue-on-error: true
+        uses: azure/login@v1.1
+        with:
+         creds: ${{secrets.RMDEVINT}}
+        
+      - name: Check resource compliance
+        uses: Azure/policy-compliance-scan@dev/v0
+        with:
+          scopes: |
+            /subscriptions/c00d16c7-6c1f-4c03-9be1-6934a4c49682/resourceGroups/az-pac-dev
+          ignore-result: |
+            /subscriptions/c00d16c7-6c1f-4c03-9be1-6934a4c49682/resourcegroups/aj-rg/providers/microsoft.containerservice/managedclusters/ajakscluster3
+            /subscriptions/c00d16c7-6c1f-4c03-9be1-6934a4c49682/resourcegroups/az-pac-dev/providers/microsoft.web/sites/azpacwebappone/
