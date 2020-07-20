@@ -89,10 +89,11 @@ function processCreatedResponses(receivedResponses: any[], token: string): any {
     finalResponses: new Array(),
     responseNextPage: new Array()
   };
+  let values = new Array();
 
   receivedResponses.map((pendingResponse: any) => {
     if (pendingResponse.statusCode == 200 && pendingResponse != null && pendingResponse.body != null) {
-      let values = pendingResponse.body.responses ? pendingResponse.body.responses : pendingResponse.body.value;
+      values = pendingResponse.body.responses ? pendingResponse.body.responses : pendingResponse.body.value;
       let nextPageLink = pendingResponse.body.nextLink;
       while( nextPageLink !=null) {
         let batchResponseNextPageUrl = pendingResponse.body.nextLink;
@@ -105,7 +106,7 @@ function processCreatedResponses(receivedResponses: any[], token: string): any {
         }
         sendRequest(webRequest).then((responsesNextPage: WebResponse) => {
           if(responsesNextPage.body.value){
-            values.append(...responsesNextPage.body.value);
+            values.push(...responsesNextPage.body.value);
             nextPageLink = responsesNextPage.body.nextLink;
           }
         });
@@ -200,7 +201,7 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
         //Polling remaining batch-responses with status = ACCEPTED
         await pollPendingResponses(pendingResponses, token).then(pollingResponses => {
           pendingResponses = pollingResponses.filter(response => {return response.statusCode == 202});
-          completedResponses.append(...pollingResponses.filter(response => {return response.statusCode == 200}));
+          completedResponses.push(...pollingResponses.filter(response => {return response.statusCode == 200}));
         })
         if (hasPollTimedout && pendingResponses.length > 0) {
           throw Error('Polling status timed-out.');
