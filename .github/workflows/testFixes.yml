@@ -9,7 +9,10 @@ jobs:
   build:
     name: AzPac
     runs-on: ubuntu-latest
-    steps:          
+    steps:         
+      - name: 'Checking out repo code'
+        uses: actions/checkout@v1
+      
       - name: Login via Az module
         continue-on-error: true
         uses: azure/login@v1.1
