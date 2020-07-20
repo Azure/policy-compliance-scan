@@ -133,7 +133,7 @@ async function pollPendingResponses(pendingResponses: any[], token: string): Pro
     if(pendingResponses && pendingResponses.length > 0) {
       core.debug(`Polling requests # ${pendingResponses.length}  ==>`);
       await sleep(BATCH_POLL_INTERVAL); // Delay before next poll
-      return await Promise.all(pendingResponses.map(async (pendingResponse: any) => {
+      pendingResponses = await Promise.all(pendingResponses.map(async (pendingResponse: any) => {
         return await batchCall(pendingResponse.headers.location, 'GET', [], token).then(response => {
           if (response.statusCode == 200) { //Will be saved in next iteration
             return response;
@@ -208,11 +208,11 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
       //Run until all batch-responses are CREATED
       while (pendingResponses && pendingResponses.length > 0 && !hasPollTimedout) {
         //Polling remaining batch-responses with status = ACCEPTED
-        await pollPendingResponses(pendingResponses, token).then(pollingResponses => {
-          pendingResponses = new Array();
-          pendingResponses = pollingResponses.filter(response => {return response.statusCode == 202});
-          completedResponses.push(...pollingResponses.filter(response => {return response.statusCode == 200}));
+        await pollPendingResponses(pendingResponses, token).then(polledResponses => {
+          pendingResponses = polledResponses.filter(response => {return response.statusCode == 202});
+          completedResponses.push(...polledResponses.filter(response => {return response.statusCode == 200}));
         })
+        console.debug(`Status :: Pending ${pendingResponses.length} responses. | Completed ${completedResponses.length} responses.`);
         if (hasPollTimedout && pendingResponses && pendingResponses.length > 0) {
           throw Error('Polling status timed-out.');
         }
@@ -228,6 +228,7 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
     }
 
     //Saving CREATED responses 
+    console.debug(`Saving ${completedResponses.length} completed responses.`);
     let intermediateResult: any;
     try{
       await processCreatedResponses(completedResponses, token).then(response => {
