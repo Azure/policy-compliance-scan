@@ -10,7 +10,6 @@ inputs:
   csv-name:
     description: 'Name of csv to be generated'
     required: false
-    default: ScanResults
   skip-artifacts:
     description: 'To skip generation of csv artifact'
     required: false
