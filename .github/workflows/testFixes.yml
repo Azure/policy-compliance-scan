@@ -17,7 +17,7 @@ jobs:
          creds: ${{secrets.RMDEVINT}}
         
       - name: Check resource compliance
-        uses: Azure/policy-compliance-scan@dev/v0
+        uses: Josh-01/policy-compliance-scan@dev/v0
         with:
           scopes: |
             /subscriptions/c00d16c7-6c1f-4c03-9be1-6934a4c49682/resourceGroups/az-pac-dev
