@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import { printPartitionedText } from '../utils/utilities'
+import { printPartitionedDebugLog } from '../utils/utilities'
 
 export function ignoreScope(scope: string): boolean {
     if (!scope) {
@@ -9,8 +9,16 @@ export function ignoreScope(scope: string): boolean {
     const ignoreList = getIgnoreScopes();
 
     for (var i = 0; i < ignoreList.length; i++) {
-        // If the given scope starts with any of the ignore scopes then we return true
-        if (scope.startsWith(ignoreList[i].toLocaleLowerCase())) {
+        if (ignoreList[i].endsWith('/*')) {
+            // Ignore input ends with '/*'. We need to ignore if the given scope starts with this pattern.
+            let startPattern:string = ignoreList[i].substr(0, ignoreList[i].length - 2).toLowerCase();
+            if (scope.toLowerCase().startsWith(startPattern)) {
+                printPartitionedDebugLog(`Ignoring resourceId : ${scope}`);
+                return true;
+            }
+        }
+        else if (scope.toLowerCase().localeCompare(ignoreList[i].toLowerCase()) == 0) {
+            printPartitionedDebugLog(`Ignoring resourceId : ${scope}`);
             return true;
         }
     }
