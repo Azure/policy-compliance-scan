@@ -187,7 +187,8 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
     let hasPollTimedout: boolean = false;
     let pollTimeoutId = setTimeout(() => { hasPollTimedout = true; }, BATCH_POLL_TIMEOUT_DURATION);
 
-    pendingResponses.push(...batchResponses);
+    pendingResponses = batchResponses.filter(response => {return response.statusCode == 202});
+    completedResponses.push(...batchResponses.filter(response => {return response.statusCode == 200}));
 
     try {
       //Run until all batch-responses are CREATED
