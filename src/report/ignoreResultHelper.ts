@@ -11,7 +11,6 @@ export function ignoreScope(scope: string): boolean {
     for (var i = 0; i < ignoreList.length; i++) {
         // If the given scope starts with any of the ignore scopes then we return true
         if (scope.startsWith(ignoreList[i].toLocaleLowerCase())) {
-            printPartitionedText(`Ignoring resourceId : ${scope}`);
             return true;
         }
     }

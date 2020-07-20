@@ -34,7 +34,7 @@ export async function generateSummary(): Promise<void> {
     //Console print and csv publish
     printPartitionedText('Policy compliance scan report::');
     let csv_object = printFormattedOutput(nonCompliantResources);
-    const skipArtifacts = core.getInput('skip-artifacts') == 'true' ? true : false;
+    const skipArtifacts = core.getInput('skip-artifacts').toLowerCase() == 'true' ? true : false;
     if (!skipArtifacts) {
       const csvName = core.getInput('csv-name') + ".csv";
       await createCSV(csv_object, csvName);

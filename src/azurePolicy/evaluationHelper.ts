@@ -3,7 +3,7 @@ import { StatusCodes, WebRequest, WebResponse, sendRequest } from "../utils/http
 import * as fs from 'fs';
 import * as fileHelper from '../utils/fileHelper';
 import { ignoreScope } from '../report/ignoreResultHelper'
-import { printPartitionedDebugLog, sleep } from '../utils/utilities'
+import { printPartitionedDebugLog, sleep, printPartitionedText } from '../utils/utilities'
 
 const BATCH_MAX_SIZE = 500;
 const BATCH_POLL_INTERVAL: number = 60 * 1000; // 1 min = 60 * 1000ms
@@ -242,7 +242,13 @@ export async function saveScanResult(polls: any[], token: string) {
 
   core.debug("Scopes length : " + resourceIds.length);
   // Getting unique scopes
-  scopes = [...new Set(resourceIds)].filter((item) => { return !ignoreScope(item) })
+  printPartitionedText(`Ignoring resourceIds : `);
+  scopes = [...new Set(resourceIds)].filter((item) => { 
+    let result: boolean = false;;
+    if(!ignoreScope(item)){
+      console.log(`${item}`);
+    }
+    return result; })
     .map(item => { return { 'scope': item } });
 
   core.debug("Unique scopes length : " + scopes.length);
