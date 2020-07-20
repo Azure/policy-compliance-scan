@@ -228,10 +228,13 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
     }
 
     //Saving CREATED responses 
+    let intermediateResult: any;
     try{
-      let intermediateResult: any = processCreatedResponses(completedResponses, token);
-      finalResponses.push(...intermediateResult.finalResponses);
-      pendingPolls.push(...intermediateResult.responseNextPage); //For getting paginated responses
+      await processCreatedResponses(completedResponses, token).then(response => {
+        intermediateResult = response;
+        finalResponses.push(...intermediateResult.finalResponses);
+        pendingPolls.push(...intermediateResult.responseNextPage); //For getting paginated responses
+      });
     }
     catch (error) {
       return Promise.reject(`Error in saving results to final array. ${error}`);
