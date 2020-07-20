@@ -7,6 +7,7 @@ import { getAccessToken } from '../auth/azAuthentication'
 export interface ScanCompletionPoll {
   scope: string;
   location: string;
+  isCompleted: boolean
 }
 
 export async function triggerOnDemandScan(): Promise<ScanCompletionPoll[]> {
@@ -17,9 +18,11 @@ export async function triggerOnDemandScan(): Promise<ScanCompletionPoll[]> {
   let polls: ScanCompletionPoll[] = [];
   for (const scope of scopes) {
     const pollLocation = await triggerScan(scope, token);
+    // If pollLocation is empty, it means the scan is already completed. Polling is not required.
     polls.push({
       'scope': scope,
-      'location': pollLocation
+      'location': pollLocation,
+      'isCompleted': !pollLocation
     });
   }
   return polls;
@@ -38,12 +41,19 @@ async function triggerScan(scope: string, token: string): Promise<string> {
 
   printPartitionedText(`Triggering scan. URL: ${triggerScanUrl}`);
   return sendRequest(webRequest).then((response: WebResponse) => {
-    if (response.headers['location']) {
-      let pollLocation = response.headers['location'];
-      console.log(`Scan triggered successfully.\nPoll URL: ${pollLocation}`);
-      return Promise.resolve(pollLocation);
+    if (response.statusCode == StatusCodes.OK) {
+      // If scan is done, return empty poll url
+      return Promise.resolve('');
+    } else if (response.statusCode == StatusCodes.ACCEPTED) {
+      if (response.headers['location']) {
+        let pollLocation = response.headers['location'];
+        console.log(`Scan triggered successfully.\nPoll URL: ${pollLocation}`);
+        return Promise.resolve(pollLocation);
+      } else {
+        return Promise.reject(`Location header missing in response.\nResponse body: ${JSON.stringify(response.body)}`);
+      }
     } else {
-      return Promise.reject(`Location header missing in response.\nResponse body: ${JSON.stringify(response.body)}`);
+      return Promise.reject(`An error occured while triggering policy compliance scan. Scope: ${scope}, StatusCode: ${response.statusCode}, Response body: ${JSON.stringify(response.body)}`);
     }
   }).catch(error => {
     console.log('An error occured while triggering the scan. Error: ', error);
@@ -51,7 +61,12 @@ async function triggerScan(scope: string, token: string): Promise<string> {
   });
 }
 
-async function isScanCompleted(pollUrl: string, token: string): Promise<boolean> {
+async function isScanCompleted(poll: ScanCompletionPoll, token: string): Promise<boolean> {
+  if(poll.isCompleted) {
+    return Promise.resolve(true);
+  }
+
+  const pollUrl = poll.location;
   let webRequest = new WebRequest();
   webRequest.method = 'GET';
   webRequest.uri = pollUrl;
@@ -94,7 +109,7 @@ export async function pollForCompletion(polls: ScanCompletionPoll[]) {
       let pendingPollsNew: ScanCompletionPoll[] = [];
       let completedPolls: ScanCompletionPoll[] = [];
       for (const poll of pendingPolls) {
-        const isCompleted = await isScanCompleted(poll.location, token);
+        const isCompleted = await isScanCompleted(poll, token);
         if (isCompleted) {
           completedPolls.push(poll);
         }
