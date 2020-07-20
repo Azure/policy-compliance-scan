@@ -105,7 +105,7 @@ async function processCreatedResponses(receivedResponses: any[], token: string):
           }
         }
 
-        core.debug(`Saving ${values.length} rows to result.`)
+        core.debug(`Saving ${values.length} resourceIds to result.`)
         values.forEach(response => {
           finalResponses.push(response); //Saving to final response array
           //Will be called in next set of batch calls to get the paginated responses for each request within batch call
