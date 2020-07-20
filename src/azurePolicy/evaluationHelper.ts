@@ -244,9 +244,10 @@ export async function saveScanResult(polls: any[], token: string) {
   // Getting unique scopes
   printPartitionedText(`Ignoring resourceIds : `);
   scopes = [...new Set(resourceIds)].filter((item) => { 
-    let result: boolean = false;;
-    if(!ignoreScope(item)){
+    let result: boolean = true;;
+    if(ignoreScope(item)){
       console.log(`${item}`);
+      result = false;
     }
     return result; })
     .map(item => { return { 'scope': item } });
