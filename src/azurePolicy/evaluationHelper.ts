@@ -208,11 +208,11 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
       //Run until all batch-responses are CREATED
       while (pendingResponses && pendingResponses.length > 0 && !hasPollTimedout) {
         //Polling remaining batch-responses with status = ACCEPTED
-        await pollPendingResponses(pendingResponses, token).then(pollingResponses => {
-          pendingResponses = new Array();
-          pendingResponses = pollingResponses.filter(response => {return response.statusCode == 202});
-          completedResponses.push(...pollingResponses.filter(response => {return response.statusCode == 200}));
+        await pollPendingResponses(pendingResponses, token).then(polledResponses => {
+          pendingResponses = polledResponses.filter(response => {return response.statusCode == 202});
+          completedResponses.push(...polledResponses.filter(response => {return response.statusCode == 200}));
         })
+        console.debug(`Status :: Pending ${pendingResponses.length} responses. | Completed ${completedResponses.length} responses.`);
         if (hasPollTimedout && pendingResponses && pendingResponses.length > 0) {
           throw Error('Polling status timed-out.');
         }
@@ -228,6 +228,7 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
     }
 
     //Saving CREATED responses 
+    console.debug(`Saving ${completedResponses.length} completed responses.`);
     let intermediateResult: any;
     try{
       await processCreatedResponses(completedResponses, token).then(response => {
