@@ -2,7 +2,7 @@ name: Test fixes
 on:
   push:
     branches: 
-      - master
+      - dev/v0
     paths:
       - .github/workflows/testFixes.yml
 jobs:
