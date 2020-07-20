@@ -5,7 +5,7 @@ import { dirname } from 'path';
 import * as fileHelper from '../utils/fileHelper';
 import { printPartitionedText } from '../utils/utilities';
 
-const CSV_FILENAME = 'ScanReport.csv';
+const CSV_FILENAME = 'ScanReport';
 const KEY_RESOURCE_ID = "resourceId";
 const KEY_POLICY_ASSG_ID = "policyAssignmentId";
 const KEY_POLICY_DEF_ID = "policyDefinitionId"
@@ -36,7 +36,7 @@ export async function generateSummary(): Promise<void> {
     let csv_object = printFormattedOutput(nonCompliantResources);
     const skipArtifacts = core.getInput('skip-artifacts').toLowerCase() == 'true' ? true : false;
     if (!skipArtifacts) {
-      const csvName = core.getInput('csv-name') + ".csv";
+      const csvName = core.getInput('csv-name');
       await createCSV(csv_object, csvName);
     }
     throw Error("One or more resources were non-compliant");
@@ -146,7 +146,7 @@ export function printFormattedOutput(data: any[]): any[] {
 
 export async function createCSV(data: any[], csvName: string) {
   try {
-    let fileName = csvName ? csvName : CSV_FILENAME;
+    let fileName = (csvName ? csvName : (CSV_FILENAME + '_' + new Date().valueOf()) ) +'.csv';
     let filePath = fileHelper.writeToCSVFile(data, fileName);
     await fileHelper.uploadFile(
       fileName,
