@@ -1,4 +1,4 @@
-name: Test fixes for branch 2
+name: Test fixes for branch
 on:
   push: 
     branches: 
