@@ -105,7 +105,7 @@ function processCreatedResponses(receivedResponses: any[], token: string): any {
         }
         sendRequest(webRequest).then((responsesNextPage: WebResponse) => {
           if(responsesNextPage.body.value){
-            values.append(...responsesNextPage.body.value);
+            values.push(...responsesNextPage.body.value);
             nextPageLink = responsesNextPage.body.nextLink;
           }
         });
@@ -200,7 +200,7 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
         //Polling remaining batch-responses with status = ACCEPTED
         await pollPendingResponses(pendingResponses, token).then(pollingResponses => {
           pendingResponses = pollingResponses.filter(response => {return response.statusCode == 202});
-          completedResponses.append(...pollingResponses.filter(response => {return response.statusCode == 200}));
+          completedResponses.push(...pollingResponses.filter(response => {return response.statusCode == 200}));
         })
         if (hasPollTimedout && pendingResponses.length > 0) {
           throw Error('Polling status timed-out.');
