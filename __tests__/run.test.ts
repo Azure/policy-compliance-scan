@@ -1,11 +1,11 @@
 import { run } from '../src/run';
 import * as core from '@actions/core';
-import * as tokenGenerator from '../src/AzCLIAADTokenGenerator'
+import * as tokenGenerator from '../src/auth/azAuthentication'
 import { mocked } from 'ts-jest/utils';
-import * as scanHelper from '../src/scanHelper'
-import * as fileHelper from '../src/fileHelper'
-import * as client from '../src/client'
-import * as resultScanner from '../src/resultScanner';
+import * as scanHelper from '../src/azurePolicy/scanHelper'
+import * as fileHelper from '../src/utils/fileHelper'
+import * as client from '../src/utils/httpClient'
+import * as resultScanner from '../src/azurePolicy/evaluationHelper';
 
 const mockedFileHelper = require('../src/fileHelper');
 mockedFileHelper.getPolicyScanDirectory = jest.fn().mockImplementation(() => { return 'test/_temp/containerscan_123'; });
