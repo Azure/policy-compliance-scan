@@ -1,5 +1,6 @@
-name: Test fixes
-  push:
+name: Test fixes for branch
+on:
+  push: 
     branches: 
       - dev/v0
     paths:
