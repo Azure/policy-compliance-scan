@@ -203,11 +203,6 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
 
     pendingResponses = batchResponses.filter(response => {return response.statusCode == 202});
     completedResponses.push(...batchResponses.filter(response => {return response.statusCode == 200}));
-    await processCreatedResponses(completedResponses, token).then(intermediateResult => {
-      finalResponses.push(...intermediateResult.finalResponses);
-      pendingResponses.push(...intermediateResult.pendingRequests);
-      pendingPolls.push(...intermediateResult.responseNextPage); //For getting paginated responses
-    });
 
     try {
       //Run until all batch-responses are CREATED
@@ -217,13 +212,6 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
           pendingResponses = polledResponses.filter(response => {return response.statusCode == 202});
           completedResponses.push(...polledResponses.filter(response => {return response.statusCode == 200}));
         })
-        
-        await processCreatedResponses(completedResponses, token).then(intermediateResult => {
-          finalResponses.push(...intermediateResult.finalResponses);
-          pendingResponses.push(...intermediateResult.pendingRequests);
-          pendingPolls.push(...intermediateResult.responseNextPage); //For getting paginated responses
-        });
-
         console.debug(`Status :: Pending ${pendingResponses.length} responses. | Completed ${completedResponses.length} responses.`);
         if (hasPollTimedout && pendingResponses && pendingResponses.length > 0) {
           throw Error('Polling status timed-out.');
@@ -232,6 +220,36 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
     }
     catch (error) {
       return Promise.reject(`Error in polling. ${error}`);
+    }
+    finally {
+      if (!hasPollTimedout) {
+        clearTimeout(pollTimeoutId);
+      }
+    }
+    pendingResponses = [];
+    //Getting results 
+    try{
+      await processCreatedResponses(completedResponses, token).then(intermediateResult => {
+        finalResponses.push(...intermediateResult.finalResponses);
+        pendingResponses.push(...intermediateResult.pendingRequests);
+        pendingPolls.push(...intermediateResult.responseNextPage); //For getting paginated responses
+      });
+      
+      while (pendingResponses && pendingResponses.length > 0 && !hasPollTimedout) {
+        //Getting batch responses nextPage
+        await pollPendingResponses(pendingResponses, token).then(polledResponses => {
+          pendingResponses = polledResponses.filter(response => {return response.statusCode == 202});
+          completedResponses.push(...polledResponses.filter(response => {return response.statusCode == 200}));
+        })
+        await processCreatedResponses(completedResponses, token).then(intermediateResult => {
+          finalResponses.push(...intermediateResult.finalResponses);
+          pendingResponses.push(...intermediateResult.pendingRequests);
+          pendingPolls.push(...intermediateResult.responseNextPage);
+        });
+      }
+    } 
+    catch (error) {
+      return Promise.reject(`Error in saving results after poll. ${error}`);
     }
     finally {
       if (!hasPollTimedout) {
