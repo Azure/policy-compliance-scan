@@ -88,32 +88,34 @@ async function processCreatedResponses(receivedResponses: any[], token: string):
   let finalResponses: any = [];
   let responseNextPage: any = [];
   
-  let values = new Array();
+  let values;
   try{
-    await Promise.all(receivedResponses.map(async (pendingResponse: any) => {   //way to do async forEach
+    receivedResponses = await Promise.all(receivedResponses.map(async (pendingResponse: any) => {   //way to do async forEach
+      values = [];
       if (pendingResponse.statusCode == 200 && pendingResponse != null && pendingResponse.body != null) {
-        values = [];
         values = pendingResponse.body.responses ? pendingResponse.body.responses : pendingResponse.body.value;
         let nextPageLink = pendingResponse.body.nextLink;
         while( nextPageLink && nextPageLink !=null) {
-          let batchResponsesNextPage = await batchCall(nextPageLink, 'GET', [], token);
-          if(batchResponsesNextPage.body.value){
-            values.push(...batchResponsesNextPage.body.value);
-            nextPageLink = batchResponsesNextPage.body.nextLink ? batchResponsesNextPage.body.nextLink : null;
-          }
+          await batchCall(nextPageLink, 'GET', [], token).then(batchResponsesNextPage => {
+            if(batchResponsesNextPage.body.value){
+              values.push(...batchResponsesNextPage.body.value);
+              nextPageLink = batchResponsesNextPage.body.nextLink ? batchResponsesNextPage.body.nextLink : null;
+            }
+          });
         }
-
-        printPartitionedDebugLog(`Saving ${values.length} resourceIds to result.`)
-        values.forEach(response => {
-          finalResponses.push(response); //Saving to final response array
-          //Will be called in next set of batch calls to get the paginated responses for each request within batch call
-          if (response.content["@odata.nextLink"] != null) {
-            responseNextPage.push({ 'scope': response.content["@odata.nextLink"] });
-          }
-        });
       }
-      return;
+      return {'values' : values};
     }));
+    receivedResponses.forEach(response => {
+      printPartitionedDebugLog(`Saving ${response.values.length} resourceIds to result.`)
+      response.values.array.forEach(value => {
+        finalResponses.push(value); //Saving to final response array
+        //Will be called in next set of batch calls to get the paginated responses for each request within batch call
+        if (value.content["@odata.nextLink"] != null) {
+          responseNextPage.push({ 'scope': value.content["@odata.nextLink"] });
+        }
+      });  
+    });
   }
   catch (error) {
     return Promise.reject(`Error in getting batch response pages. ${error}`);
