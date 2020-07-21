@@ -89,20 +89,24 @@ async function processCreatedResponses(receivedResponses: any[], token: string):
   let responseNextPage: any = [];
   
   let values;
+  let responseList;
   try{
     receivedResponses = await Promise.all(receivedResponses.map(async (pendingResponse: any) => {   //way to do async forEach
       values = [];
+      responseList = [];
       if (pendingResponse.statusCode == 200 && pendingResponse != null && pendingResponse.body != null) {
         values = pendingResponse.body.responses ? pendingResponse.body.responses : pendingResponse.body.value;
         let nextPageLink = pendingResponse.body.nextLink;
+      
         while( nextPageLink && nextPageLink !=null) {
-          await batchCall(nextPageLink, 'GET', [], token).then(batchResponsesNextPage => {
-            if(batchResponsesNextPage.body.value){
-              values.push(...batchResponsesNextPage.body.value);
-              nextPageLink = batchResponsesNextPage.body.nextLink ? batchResponsesNextPage.body.nextLink : null;
-            }
-          });
+          responseList.push(await batchCall(nextPageLink, 'GET', [], token).then(batchResponsesNextPage => {
+              nextPageLink = (batchResponsesNextPage.body && batchResponsesNextPage.body.nextLink) ? batchResponsesNextPage.body.nextLink : null;
+              return batchResponsesNextPage;
+          }));
         }
+        await Promise.all(responseList.map(async (response)=> {
+          values.push(...response.body.value);
+        }));
       }
       return { 'values' : values};
     }));
