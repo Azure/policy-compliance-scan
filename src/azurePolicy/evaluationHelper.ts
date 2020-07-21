@@ -7,7 +7,7 @@ import { printPartitionedDebugLog, sleep, printPartitionedText } from '../utils/
 
 const BATCH_MAX_SIZE = 500;
 const BATCH_POLL_INTERVAL: number = 60 * 1000; // 1 min = 60 * 1000ms
-const BATCH_POLL_TIMEOUT_DURATION: number = 5 * 60 * 1000;  //5 mins
+const BATCH_POLL_TIMEOUT_DURATION: number = 120 * 60 * 1000;  //5 mins
 
 const CONDITION_MAP = {
   'containsKey': 'Current value must contain the target value as a key.',
@@ -214,7 +214,9 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
         })
         console.debug(`Status :: Pending ${pendingResponses.length} responses. | Completed ${completedResponses.length} responses.`);
         if (hasPollTimedout && pendingResponses && pendingResponses.length > 0) {
-          throw Error('Polling status timed-out.');
+          console.log('Polling responses timed-out.');
+          console.log(`Pending responses : ${pendingResponses.length}`);
+          break;
         }
       }
     }
