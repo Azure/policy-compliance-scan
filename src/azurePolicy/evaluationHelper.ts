@@ -126,12 +126,12 @@ async function processCreatedResponses(receivedResponses: any[], token: string):
   }
 }
 
-async function pollPendingResponses(pendingResponses: any[], token: string): Promise<any[]> {
+async function pollPendingResponses(pendingResponses: any[], token: string, sleepInterval: number): Promise<any[]> {
   try{
     let url;
     if(pendingResponses && pendingResponses.length > 0) {
       core.debug(`Polling requests # ${pendingResponses.length}  ==>`);
-      await sleep(BATCH_POLL_INTERVAL); // Delay before next poll
+      await sleep(sleepInterval); // Delay before next poll
       pendingResponses = await Promise.all(pendingResponses.map(async (pendingResponse: any) => {
         url = (pendingResponse.headers && pendingResponse.headers.location) ? pendingResponse.headers.location : pendingResponse.url;
         return await batchCall(url, 'GET', [], token).then(response => {
@@ -208,7 +208,7 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
       //Run until all batch-responses are CREATED
       while (pendingResponses && pendingResponses.length > 0 && !hasPollTimedout) {
         //Polling remaining batch-responses with status = ACCEPTED
-        await pollPendingResponses(pendingResponses, token).then(polledResponses => {
+        await pollPendingResponses(pendingResponses, token, BATCH_POLL_INTERVAL).then(polledResponses => {
           pendingResponses = polledResponses.filter(response => {return response.statusCode == 202});
           completedResponses.push(...polledResponses.filter(response => {return response.statusCode == 200}));
         })
@@ -239,10 +239,12 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
       
       while (pendingResponses && pendingResponses.length > 0 && !hasPollTimedout) {
         //Getting batch responses nextPage
-        await pollPendingResponses(pendingResponses, token).then(polledResponses => {
-          pendingResponses = polledResponses.filter(response => {return response.statusCode == 202});
+        await pollPendingResponses(pendingResponses, token, 0).then(polledResponses => {
+          pendingResponses = polledResponses.filter(response => {return response.statusCode == 202}); //SHOULD BE ZERO HERE
           completedResponses.push(...polledResponses.filter(response => {return response.statusCode == 200}));
         })
+        console.debug(`Status :: Pending ${pendingResponses.length} responses. | Completed ${completedResponses.length} responses.`);
+        pendingResponses = [];
         await processCreatedResponses(completedResponses, token).then(intermediateResult => {
           finalResponses.push(...intermediateResult.finalResponses);
           pendingResponses.push(...intermediateResult.pendingRequests);
