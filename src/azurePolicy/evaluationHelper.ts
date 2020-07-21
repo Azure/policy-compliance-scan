@@ -239,6 +239,7 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
       
       while (pendingResponses && pendingResponses.length > 0 && !hasPollTimedout) {
         //Getting batch responses nextPage
+        completedResponses = [];
         await pollPendingResponses(pendingResponses, token, 0).then(polledResponses => {
           pendingResponses = polledResponses.filter(response => {return response.statusCode == 202}); //SHOULD BE ZERO HERE
           completedResponses.push(...polledResponses.filter(response => {return response.statusCode == 200}));
