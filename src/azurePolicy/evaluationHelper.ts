@@ -104,11 +104,11 @@ async function processCreatedResponses(receivedResponses: any[], token: string):
           });
         }
       }
-      return {'values' : values};
+      return { 'values' : values};
     }));
     receivedResponses.forEach(response => {
       printPartitionedDebugLog(`Saving ${response.values.length} resourceIds to result.`)
-      response.values.array.forEach(value => {
+      response.values.forEach(value => {
         finalResponses.push(value); //Saving to final response array
         //Will be called in next set of batch calls to get the paginated responses for each request within batch call
         if (value.content["@odata.nextLink"] != null) {
