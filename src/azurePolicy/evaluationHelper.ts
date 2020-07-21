@@ -90,22 +90,20 @@ async function processCreatedResponses(receivedResponses: any[], token: string):
   
   let values = new Array();
   try{
-    await Promise.all(receivedResponses.map(async (pendingResponse: any) => {
+    await Promise.all(receivedResponses.map(async (pendingResponse: any) => {   //way to do async forEach
       if (pendingResponse.statusCode == 200 && pendingResponse != null && pendingResponse.body != null) {
+        values = [];
         values = pendingResponse.body.responses ? pendingResponse.body.responses : pendingResponse.body.value;
         let nextPageLink = pendingResponse.body.nextLink;
-        while( nextPageLink !=null) {
-          let responsesNextPage;
-          await batchCall(nextPageLink, 'GET', [], token).then(response => {
-            responsesNextPage = response;
-          });
-          if(responsesNextPage.body.value){
-            values.push(...responsesNextPage.body.value);
-            nextPageLink = responsesNextPage.body.nextLink ? responsesNextPage.body.nextLink : null;
+        while( nextPageLink && nextPageLink !=null) {
+          let batchResponsesNextPage = await batchCall(nextPageLink, 'GET', [], token);
+          if(batchResponsesNextPage.body.value){
+            values.push(...batchResponsesNextPage.body.value);
+            nextPageLink = batchResponsesNextPage.body.nextLink ? batchResponsesNextPage.body.nextLink : null;
           }
         }
 
-        core.debug(`Saving ${values.length} resourceIds to result.`)
+        printPartitionedDebugLog(`Saving ${values.length} resourceIds to result.`)
         values.forEach(response => {
           finalResponses.push(response); //Saving to final response array
           //Will be called in next set of batch calls to get the paginated responses for each request within batch call
@@ -114,6 +112,7 @@ async function processCreatedResponses(receivedResponses: any[], token: string):
           }
         });
       }
+      return;
     }));
   }
   catch (error) {
@@ -228,7 +227,7 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
     }
 
     //Saving CREATED responses 
-    console.debug(`Saving ${completedResponses.length} completed responses.`);
+    printPartitionedDebugLog(`Saving ${completedResponses.length} completed responses.`);
     let intermediateResult: any;
     try{
       await processCreatedResponses(completedResponses, token).then(response => {
