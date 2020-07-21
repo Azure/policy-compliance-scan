@@ -91,25 +91,27 @@ async function processCreatedResponses(receivedResponses: any[], token: string):
   
   let values;
   try{
-    receivedResponses = await Promise.all(receivedResponses.map(async (pendingResponse: any) => {   //Way to do async forEach
-      values = [];
-      if(pendingResponse.statusCode == 200 && pendingResponse != null && pendingResponse.body != null) {
-        values = pendingResponse.body.responses ? pendingResponse.body.responses : pendingResponse.body.value;
-        let nextPageLink = pendingResponse.body.nextLink ? pendingResponse.body.nextLink : null ;
-        if(nextPageLink != null){
-          pendingRequests.push({ 'url' : nextPageLink});
-        }
-        printPartitionedDebugLog(`Saving ${values.length} completed responses.`);
-        values.forEach(value => {
-          finalResponses.push(value); //Saving to final response array
-          //Will be called in next set of batch calls to get the paginated responses for each request within batch call
-          if (value.content["@odata.nextLink"] != null) {
-            responseNextPage.push({ 'scope': value.content["@odata.nextLink"] });
+    if(receivedResponses && receivedResponses.length > 0){
+      receivedResponses = await Promise.all(receivedResponses.map(async (pendingResponse: any) => {   //Way to do async forEach
+        values = [];
+        if(pendingResponse.statusCode == 200 && pendingResponse != null && pendingResponse.body != null) {
+          values = pendingResponse.body.responses ? pendingResponse.body.responses : pendingResponse.body.value;
+          let nextPageLink = pendingResponse.body.nextLink ? pendingResponse.body.nextLink : null ;
+          if(nextPageLink != null){
+            pendingRequests.push({ 'url' : nextPageLink});
           }
-        });  
-      }
-      return { 'values' : values};
-    }));
+          printPartitionedDebugLog(`Saving ${values.length} completed responses.`);
+          values.forEach(value => {
+            finalResponses.push(value); //Saving to final response array
+            //Will be called in next set of batch calls to get the paginated responses for each request within batch call
+            if (value.content["@odata.nextLink"] != null) {
+              responseNextPage.push({ 'scope': value.content["@odata.nextLink"] });
+            }
+          });  
+        }
+        return { 'values' : values};
+      }));
+    }
   }
   catch (error) {
     return Promise.reject(`Error in getting batch response pages. ${error}`);
@@ -117,7 +119,7 @@ async function processCreatedResponses(receivedResponses: any[], token: string):
   finally {
     let resultObj = {
       finalResponses: finalResponses,
-      pendingCalls : pendingRequests,
+      pendingRequests : pendingRequests,
       responseNextPage: responseNextPage
     }
     return resultObj;
@@ -132,7 +134,7 @@ async function pollPendingResponses(pendingResponses: any[], token: string): Pro
       await sleep(BATCH_POLL_INTERVAL); // Delay before next poll
       pendingResponses = await Promise.all(pendingResponses.map(async (pendingResponse: any) => {
         url = pendingResponse.headers.location ? pendingResponse.headers.location : pendingResponse.url;
-        return await batchCall(pendingResponse.headers.location, 'GET', [], token).then(response => {
+        return await batchCall(url, 'GET', [], token).then(response => {
           if (response.statusCode == 200) { //Will be saved in next iteration
             return response;
           }
@@ -201,6 +203,11 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
 
     pendingResponses = batchResponses.filter(response => {return response.statusCode == 202});
     completedResponses.push(...batchResponses.filter(response => {return response.statusCode == 200}));
+    await processCreatedResponses(completedResponses, token).then(intermediateResult => {
+      finalResponses.push(...intermediateResult.finalResponses);
+      pendingResponses.push(...intermediateResult.pendingRequests);
+      pendingPolls.push(...intermediateResult.responseNextPage); //For getting paginated responses
+    });
 
     try {
       //Run until all batch-responses are CREATED
