@@ -87,7 +87,7 @@ export async function batchCall(batchUrl: string, batchMethod: string, batchRequ
 async function processCreatedResponses(receivedResponses: any[], token: string): Promise<any> {
   let finalResponses: any = [];
   let responseNextPage: any = [];
-  let pendingCalls: any = [];
+  let pendingRequests: any = [];
   
   let values;
   try{
@@ -97,8 +97,9 @@ async function processCreatedResponses(receivedResponses: any[], token: string):
         values = pendingResponse.body.responses ? pendingResponse.body.responses : pendingResponse.body.value;
         let nextPageLink = pendingResponse.body.nextLink ? pendingResponse.body.nextLink : null ;
         if(nextPageLink != null){
-          pendingCalls.push({ 'url' : nextPageLink});
+          pendingRequests.push({ 'url' : nextPageLink});
         }
+        printPartitionedDebugLog(`Saving ${values.length} completed responses.`);
         values.forEach(value => {
           finalResponses.push(value); //Saving to final response array
           //Will be called in next set of batch calls to get the paginated responses for each request within batch call
@@ -116,7 +117,7 @@ async function processCreatedResponses(receivedResponses: any[], token: string):
   finally {
     let resultObj = {
       finalResponses: finalResponses,
-      pendingCalls : pendingCalls,
+      pendingCalls : pendingRequests,
       responseNextPage: responseNextPage
     }
     return resultObj;
@@ -209,6 +210,7 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
           pendingResponses = polledResponses.filter(response => {return response.statusCode == 202});
           completedResponses.push(...polledResponses.filter(response => {return response.statusCode == 200}));
         })
+        
         await processCreatedResponses(completedResponses, token).then(intermediateResult => {
           finalResponses.push(...intermediateResult.finalResponses);
           pendingResponses.push(...intermediateResult.pendingRequests);
@@ -228,16 +230,6 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
       if (!hasPollTimedout) {
         clearTimeout(pollTimeoutId);
       }
-    }
-
-    //Saving CREATED responses 
-    printPartitionedDebugLog(`Saving ${completedResponses.length} completed responses.`);
-    let intermediateResult: any;
-    try{
-      
-    }
-    catch (error) {
-      return Promise.reject(`Error in saving results to final array. ${error}`);
     }
 
     uri = "${scope}";
