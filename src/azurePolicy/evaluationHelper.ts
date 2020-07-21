@@ -133,7 +133,7 @@ async function pollPendingResponses(pendingResponses: any[], token: string): Pro
       core.debug(`Polling requests # ${pendingResponses.length}  ==>`);
       await sleep(BATCH_POLL_INTERVAL); // Delay before next poll
       pendingResponses = await Promise.all(pendingResponses.map(async (pendingResponse: any) => {
-        url = pendingResponse.headers.location ? pendingResponse.headers.location : pendingResponse.url;
+        url = (pendingResponse.headers && pendingResponse.headers.location) ? pendingResponse.headers.location : pendingResponse.url;
         return await batchCall(url, 'GET', [], token).then(response => {
           if (response.statusCode == 200) { //Will be saved in next iteration
             return response;
