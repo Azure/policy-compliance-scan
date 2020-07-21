@@ -87,6 +87,7 @@ export async function batchCall(batchUrl: string, batchMethod: string, batchRequ
 async function processCreatedResponses(receivedResponses: any[], token: string): Promise<any> {
   let finalResponses: any = [];
   let responseNextPage: any = [];
+  let pendingCalls: any = [];
   
   let values;
   try{
@@ -96,7 +97,7 @@ async function processCreatedResponses(receivedResponses: any[], token: string):
         values = pendingResponse.body.responses ? pendingResponse.body.responses : pendingResponse.body.value;
         let nextPageLink = pendingResponse.body.nextLink ? pendingResponse.body.nextLink : null ;
         if(nextPageLink != null){
-          responseNextPage.push({ 'scope': nextPageLink });
+          pendingCalls.push({ 'url' : nextPageLink});
         }
         values.forEach(value => {
           finalResponses.push(value); //Saving to final response array
@@ -115,6 +116,7 @@ async function processCreatedResponses(receivedResponses: any[], token: string):
   finally {
     let resultObj = {
       finalResponses: finalResponses,
+      pendingCalls : pendingCalls,
       responseNextPage: responseNextPage
     }
     return resultObj;
@@ -123,10 +125,12 @@ async function processCreatedResponses(receivedResponses: any[], token: string):
 
 async function pollPendingResponses(pendingResponses: any[], token: string): Promise<any[]> {
   try{
+    let url;
     if(pendingResponses && pendingResponses.length > 0) {
       core.debug(`Polling requests # ${pendingResponses.length}  ==>`);
       await sleep(BATCH_POLL_INTERVAL); // Delay before next poll
       pendingResponses = await Promise.all(pendingResponses.map(async (pendingResponse: any) => {
+        url = pendingResponse.headers.location ? pendingResponse.headers.location : pendingResponse.url;
         return await batchCall(pendingResponse.headers.location, 'GET', [], token).then(response => {
           if (response.statusCode == 200) { //Will be saved in next iteration
             return response;
@@ -205,6 +209,12 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
           pendingResponses = polledResponses.filter(response => {return response.statusCode == 202});
           completedResponses.push(...polledResponses.filter(response => {return response.statusCode == 200}));
         })
+        await processCreatedResponses(completedResponses, token).then(intermediateResult => {
+          finalResponses.push(...intermediateResult.finalResponses);
+          pendingResponses.push(...intermediateResult.pendingRequests);
+          pendingPolls.push(...intermediateResult.responseNextPage); //For getting paginated responses
+        });
+
         console.debug(`Status :: Pending ${pendingResponses.length} responses. | Completed ${completedResponses.length} responses.`);
         if (hasPollTimedout && pendingResponses && pendingResponses.length > 0) {
           throw Error('Polling status timed-out.');
@@ -224,10 +234,7 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
     printPartitionedDebugLog(`Saving ${completedResponses.length} completed responses.`);
     let intermediateResult: any;
     try{
-      await processCreatedResponses(completedResponses, token).then(intermediateResult => {
-        finalResponses.push(...intermediateResult.finalResponses);
-        pendingPolls.push(...intermediateResult.responseNextPage); //For getting paginated responses
-      });
+      
     }
     catch (error) {
       return Promise.reject(`Error in saving results to final array. ${error}`);
