@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as core from '@actions/core';
 import * as os from 'os';
 import {create, UploadOptions} from '@actions/artifact';
+import { printPartitionedDebugLog } from './utilities';
 
 let POLICY_SCAN_DIRECTORY = '';
 export const JSON_FILENAME = 'ScanReport.json';
@@ -24,15 +25,18 @@ export function getFileJson(path: string): any {
     try {
         rawContent = fs.readFileSync(path, 'utf8');
         let savedData : any[] = [];
+        printPartitionedDebugLog(`Reading from json file`);
         if(rawContent != null && rawContent.length > 0){
             offset = 0;
             start = rawContent.indexOf('[', offset);
             end = rawContent.indexOf(']', offset) + 1;
             while(start >= 0){
                 savedData.push(...JSON.parse(rawContent.substring(start,end)));
+                core.debug(``);
                 offset = rawContent.indexOf(']', offset) + 1;
                 start = rawContent.indexOf('[', offset);
                 end = rawContent.indexOf(']', offset) + 1;
+                printPartitionedDebugLog(`Step: ${savedData}`);
             }
         }
           return savedData;
