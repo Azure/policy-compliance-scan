@@ -282,7 +282,7 @@ export async function saveScanResult(polls: any[], token: string) {
   let policyEvalUrl = 'https://management.azure.com${scope}/providers/Microsoft.PolicyInsights/policyStates/latest/queryResults?api-version=2019-10-01&$expand=PolicyEvaluationDetails';
 
   //First batch call
-  printPartitionedDebugLog('First set of batch calls::');
+  printPartitionedDebugLog('First set of batch calls - Fetching list of unique non-compliant resourceIds :: ');
   await computeBatchCalls(scanResultUrl, 'POST', null, polls, token).then((responseList) => {
     responseList.forEach(resultsObject => {
       if (resultsObject.httpStatusCode == 200) {
@@ -295,20 +295,27 @@ export async function saveScanResult(polls: any[], token: string) {
   });
 
   core.debug("Scopes length : " + resourceIds.length);
-  // Getting unique scopes
+  // Getting unique scopes and ignoring
+  let result: boolean = true;
+  let isResourceIgnored: boolean = false;
   printPartitionedText(`Ignoring resourceIds : `);
   scopes = [...new Set(resourceIds)].filter((item) => { 
-    let result: boolean = true;;
+    result = true;
     if(ignoreScope(item)){
       console.log(`${item}`);
       result = false;
+      isResourceIgnored = true;
     }
     return result; })
     .map(item => { return { 'scope': item } });
 
+  if(!isResourceIgnored){
+    console.log(`No resourceId ignored`);
+  }
+
   core.debug("# of Unique resourceIds scanned : " + scopes.length);
 
-  printPartitionedDebugLog('Second set of batch calls::');
+  printPartitionedDebugLog('Second set of batch calls - Fetching all details of non-compliant resourceIds::');
   await computeBatchCalls(policyEvalUrl, 'POST', null, scopes, token).then((responseList) => {
     responseList.forEach(resultsObject => {
       if (resultsObject.httpStatusCode == 200) {
