@@ -7,7 +7,7 @@ import { printPartitionedDebugLog, sleep, printPartitionedText } from '../utils/
 
 const BATCH_MAX_SIZE = 500;
 const BATCH_POLL_INTERVAL: number = 60 * 1000; // 1 min = 60 * 1000ms
-const BATCH_POLL_TIMEOUT_DURATION: number = 5 * 60 * 1000;  //5 mins
+const BATCH_POLL_TIMEOUT_DURATION: number = 120 * 60 * 1000;  //5 mins
 
 const CONDITION_MAP = {
   'containsKey': 'Current value must contain the target value as a key.',
@@ -87,34 +87,31 @@ export async function batchCall(batchUrl: string, batchMethod: string, batchRequ
 async function processCreatedResponses(receivedResponses: any[], token: string): Promise<any> {
   let finalResponses: any = [];
   let responseNextPage: any = [];
+  let pendingRequests: any = [];
   
-  let values = new Array();
+  let values;
   try{
-    await Promise.all(receivedResponses.map(async (pendingResponse: any) => {
-      if (pendingResponse.statusCode == 200 && pendingResponse != null && pendingResponse.body != null) {
-        values = pendingResponse.body.responses ? pendingResponse.body.responses : pendingResponse.body.value;
-        let nextPageLink = pendingResponse.body.nextLink;
-        while( nextPageLink !=null) {
-          let responsesNextPage;
-          await batchCall(nextPageLink, 'GET', [], token).then(response => {
-            responsesNextPage = response;
-          });
-          if(responsesNextPage.body.value){
-            values.push(...responsesNextPage.body.value);
-            nextPageLink = responsesNextPage.body.nextLink ? responsesNextPage.body.nextLink : null;
+    if(receivedResponses && receivedResponses.length > 0){
+      receivedResponses = await Promise.all(receivedResponses.map(async (pendingResponse: any) => {   //Way to do async forEach
+        values = [];
+        if(pendingResponse.statusCode == 200 && pendingResponse != null && pendingResponse.body != null) {
+          values = pendingResponse.body.responses ? pendingResponse.body.responses : pendingResponse.body.value;
+          let nextPageLink = pendingResponse.body.nextLink ? pendingResponse.body.nextLink : null ;
+          if(nextPageLink != null){
+            pendingRequests.push({ 'url' : nextPageLink});
           }
+          printPartitionedDebugLog(`Saving ${values.length} completed responses.`);
+          values.forEach(value => {
+            finalResponses.push(value); //Saving to final response array
+            //Will be called in next set of batch calls to get the paginated responses for each request within batch call
+            if (value.content["@odata.nextLink"] != null) {
+              responseNextPage.push({ 'scope': value.content["@odata.nextLink"] });
+            }
+          });  
         }
-
-        core.debug(`Saving ${values.length} resourceIds to result.`)
-        values.forEach(response => {
-          finalResponses.push(response); //Saving to final response array
-          //Will be called in next set of batch calls to get the paginated responses for each request within batch call
-          if (response.content["@odata.nextLink"] != null) {
-            responseNextPage.push({ 'scope': response.content["@odata.nextLink"] });
-          }
-        });
-      }
-    }));
+        return { 'values' : values};
+      }));
+    }
   }
   catch (error) {
     return Promise.reject(`Error in getting batch response pages. ${error}`);
@@ -122,19 +119,22 @@ async function processCreatedResponses(receivedResponses: any[], token: string):
   finally {
     let resultObj = {
       finalResponses: finalResponses,
+      pendingRequests : pendingRequests,
       responseNextPage: responseNextPage
     }
     return resultObj;
   }
 }
 
-async function pollPendingResponses(pendingResponses: any[], token: string): Promise<any[]> {
+async function pollPendingResponses(pendingResponses: any[], token: string, sleepInterval: number): Promise<any[]> {
   try{
+    let url;
     if(pendingResponses && pendingResponses.length > 0) {
       core.debug(`Polling requests # ${pendingResponses.length}  ==>`);
-      await sleep(BATCH_POLL_INTERVAL); // Delay before next poll
+      await sleep(sleepInterval); // Delay before next poll
       pendingResponses = await Promise.all(pendingResponses.map(async (pendingResponse: any) => {
-        return await batchCall(pendingResponse.headers.location, 'GET', [], token).then(response => {
+        url = (pendingResponse.headers && pendingResponse.headers.location) ? pendingResponse.headers.location : pendingResponse.url;
+        return await batchCall(url, 'GET', [], token).then(response => {
           if (response.statusCode == 200) { //Will be saved in next iteration
             return response;
           }
@@ -208,13 +208,15 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
       //Run until all batch-responses are CREATED
       while (pendingResponses && pendingResponses.length > 0 && !hasPollTimedout) {
         //Polling remaining batch-responses with status = ACCEPTED
-        await pollPendingResponses(pendingResponses, token).then(polledResponses => {
+        await pollPendingResponses(pendingResponses, token, BATCH_POLL_INTERVAL).then(polledResponses => {
           pendingResponses = polledResponses.filter(response => {return response.statusCode == 202});
           completedResponses.push(...polledResponses.filter(response => {return response.statusCode == 200}));
         })
         console.debug(`Status :: Pending ${pendingResponses.length} responses. | Completed ${completedResponses.length} responses.`);
         if (hasPollTimedout && pendingResponses && pendingResponses.length > 0) {
-          throw Error('Polling status timed-out.');
+          console.log('Polling responses timed-out.');
+          console.log(`Pending responses : ${pendingResponses.length}`);
+          break;
         }
       }
     }
@@ -226,19 +228,38 @@ export async function computeBatchCalls(uri: string, method: string, commonHeade
         clearTimeout(pollTimeoutId);
       }
     }
-
-    //Saving CREATED responses 
-    console.debug(`Saving ${completedResponses.length} completed responses.`);
-    let intermediateResult: any;
+    pendingResponses = [];
+    //Getting results 
     try{
-      await processCreatedResponses(completedResponses, token).then(response => {
-        intermediateResult = response;
+      await processCreatedResponses(completedResponses, token).then(intermediateResult => {
         finalResponses.push(...intermediateResult.finalResponses);
+        pendingResponses.push(...intermediateResult.pendingRequests);
         pendingPolls.push(...intermediateResult.responseNextPage); //For getting paginated responses
       });
-    }
+      
+      while (pendingResponses && pendingResponses.length > 0 && !hasPollTimedout) {
+        //Getting batch responses nextPage
+        completedResponses = [];
+        await pollPendingResponses(pendingResponses, token, 0).then(polledResponses => {
+          pendingResponses = polledResponses.filter(response => {return response.statusCode == 202}); //SHOULD BE ZERO HERE
+          completedResponses.push(...polledResponses.filter(response => {return response.statusCode == 200}));
+        })
+        console.debug(`Status :: Pending ${pendingResponses.length} responses. | Completed ${completedResponses.length} responses.`);
+        pendingResponses = [];
+        await processCreatedResponses(completedResponses, token).then(intermediateResult => {
+          finalResponses.push(...intermediateResult.finalResponses);
+          pendingResponses.push(...intermediateResult.pendingRequests);
+          pendingPolls.push(...intermediateResult.responseNextPage);
+        });
+      }
+    } 
     catch (error) {
-      return Promise.reject(`Error in saving results to final array. ${error}`);
+      return Promise.reject(`Error in saving results after poll. ${error}`);
+    }
+    finally {
+      if (!hasPollTimedout) {
+        clearTimeout(pollTimeoutId);
+      }
     }
 
     uri = "${scope}";
@@ -261,7 +282,7 @@ export async function saveScanResult(polls: any[], token: string) {
   let policyEvalUrl = 'https://management.azure.com${scope}/providers/Microsoft.PolicyInsights/policyStates/latest/queryResults?api-version=2019-10-01&$expand=PolicyEvaluationDetails';
 
   //First batch call
-  printPartitionedDebugLog('First set of batch calls::');
+  printPartitionedDebugLog('First set of batch calls - Fetching list of unique non-compliant resourceIds :: ');
   await computeBatchCalls(scanResultUrl, 'POST', null, polls, token).then((responseList) => {
     responseList.forEach(resultsObject => {
       if (resultsObject.httpStatusCode == 200) {
@@ -274,20 +295,27 @@ export async function saveScanResult(polls: any[], token: string) {
   });
 
   core.debug("Scopes length : " + resourceIds.length);
-  // Getting unique scopes
+  // Getting unique scopes and ignoring
+  let result: boolean = true;
+  let isResourceIgnored: boolean = false;
   printPartitionedText(`Ignoring resourceIds : `);
   scopes = [...new Set(resourceIds)].filter((item) => { 
-    let result: boolean = true;;
+    result = true;
     if(ignoreScope(item)){
       console.log(`${item}`);
       result = false;
+      isResourceIgnored = true;
     }
     return result; })
     .map(item => { return { 'scope': item } });
 
+  if(!isResourceIgnored){
+    console.log(`No resourceId ignored`);
+  }
+
   core.debug("# of Unique resourceIds scanned : " + scopes.length);
 
-  printPartitionedDebugLog('Second set of batch calls::');
+  printPartitionedDebugLog('Second set of batch calls - Fetching all details of non-compliant resourceIds::');
   await computeBatchCalls(policyEvalUrl, 'POST', null, scopes, token).then((responseList) => {
     responseList.forEach(resultsObject => {
       if (resultsObject.httpStatusCode == 200) {
