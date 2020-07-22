@@ -320,7 +320,7 @@ export async function computeBatchCalls(
             })
           );
         });
-        console.debug(
+        core.debug(
           `Status :: Pending ${pendingResponses.length} responses. | Completed ${completedResponses.length} responses.`
         );
         if (
@@ -370,7 +370,7 @@ export async function computeBatchCalls(
             );
           }
         );
-        console.debug(
+        core.debug(
           `Status :: Pending ${pendingResponses.length} responses. | Completed ${completedResponses.length} responses.`
         );
         pendingResponses = [];
