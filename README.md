@@ -3,7 +3,7 @@
 
 With the Azure Policy Compliance Scan action, you can now easily trigger a [on demand  scan](https://docs.microsoft.com/en-us/azure/governance/policy/how-to/get-compliance-data#on-demand-evaluation-scan) from your GitHub workflow on one or multiple resources, resource groups or subscriptions, and continue/fail the workflow based on the compliance state of resources. You can also use this Github Action to generate a report on the compliance state of scanned resources for further analysis or archiving.
 
-New to Azure Policy? Its a Azure service that lets you enforce organizational standards and asses compliance at scale. To know more check out: [Azure Policies - Overview](https://docs.microsoft.com/en-us/azure/governance/policy/overview)
+New to Azure Policy? Its an Azure service that lets you enforce organizational standards and asses compliance at scale. To know more check out: [Azure Policies - Overview](https://docs.microsoft.com/en-us/azure/governance/policy/overview)
 
 The definition of this Github Action is in [action.yml](https://github.com/Azure/policy-compliance-scan/blob/master/action.yml).
 
