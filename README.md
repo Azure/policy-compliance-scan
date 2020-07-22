@@ -15,7 +15,7 @@ The definition of this Github Action is in [action.yml](https://github.com/Azure
 * `scopes-ignore`: Optional. Takes full identifier for one or more azure resources, resource groups. If the resources are found non-compliant after the scan completion, the action fails. However, in this input you can specify resources or resource groups for which the compliance state will be ignored. The action will pass irrespective of the compliance state of these resources.  In case you want the action to always pass irrespective of the compliance state of resources, you can set its value as 'all'. 
 * `wait`: Optional. Depending on the breadth, the time taken for compliance scan can range from a few minutes to several hours. By default, the action will wait for the compliance scan to complete and succeed or fail based on the compliance state of resources. However, you can mark this input as false, in which case the action will trigger the compliance scan and succeed immediately. The status of the triggered scan and the compliance state of resources would have to be then viewed in [activity log](https://docs.microsoft.com/en-us/azure/azure-monitor/platform/activity-log) of the resource in Azure portal. 
 * `skip-report`: Optional. Defaults to false. If false, the action will upload a CSV file containing a list of resources that are non-compliant after the triggered scan is complete. The CSV file can be downloaded as an artifact from the workflow run for manual analysis. Note that the number of rows in CSV are capped at 100,000. 
-* `report-name`: Optional. Defaults to abc-10July2020-1354[TODO] The filename for the CSV to be uploaded. Ignored if skip-report is set to true.
+* `report-name`: Optional. The filename for the CSV to be uploaded. Ignored if skip-report is set to true.
 
  
 
@@ -23,8 +23,7 @@ The definition of this Github Action is in [action.yml](https://github.com/Azure
 
 ## Dependencies on other Github Actions
 
-* Azure Login Action: Authenticate using [Azure Login](https://github.com/Azure/login)  action. The Policy Compliance Scan action assumes that the underlying credentials have sufficient permissions to trigger azure policy compliance scan. For more details on permissions for Azure Policy checkout: [TODO]
-Once login is done, the next set of Actions in the workflow can perform tasks such as triggering the compliance scan and fetching the compliance state of resources.
+* Azure Login Action: Authenticate using [Azure Login](https://github.com/Azure/login)  action. The Policy Compliance Scan action assumes that the underlying SPN credentials have sufficient permissions to trigger azure policy compliance scan. Once login is done, the next set of Actions in the workflow can perform tasks such as triggering the compliance scan and fetching the compliance state of resources.
 
   
 ### Sample workflow to trigger a scan on a subscription 
