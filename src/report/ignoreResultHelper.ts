@@ -6,30 +6,26 @@ export function ignoreScope(scope: string): boolean {
     return false;
   }
 
-  const ignoreList = getIgnoreScopes();
+    const ignoreList: string[] = getIgnoreScopes();
 
-  for (var i = 0; i < ignoreList.length; i++) {
-    if (ignoreList[i].endsWith("/*")) {
-      // Ignore input ends with '/*'. We need to ignore if the given scope starts with this pattern.
-      let startPattern: string = ignoreList[i]
-        .substr(0, ignoreList[i].length - 2)
-        .toLowerCase();
-      if (scope.toLowerCase().startsWith(startPattern)) {
-        printPartitionedDebugLog(`Ignoring resourceId : ${scope}`);
-        return true;
-      }
-    } else if (
-      scope.toLowerCase().localeCompare(ignoreList[i].toLowerCase()) == 0
-    ) {
-      printPartitionedDebugLog(`Ignoring resourceId : ${scope}`);
-      return true;
+    for (const ignoreScope of ignoreList) {
+        if (ignoreScope.endsWith('/*')) {
+            // Ignore input ends with '/*'. We need to ignore if the given scope starts with this pattern.
+            let startPattern:string = ignoreScope.substr(0, ignoreScope.length - 2).toLowerCase();
+            if (scope.toLowerCase().startsWith(startPattern)) {
+                return true;
+            }
+        }
+        else if (scope.toLowerCase() == ignoreScope.toLowerCase()) {
+            return true;
+        }
     }
   }
   return false;
 }
 
 function getIgnoreScopes(): string[] {
-  const ignoreScopesInput = core.getInput("ignore-result");
-  const ignoreScopes = ignoreScopesInput ? ignoreScopesInput.split("\n") : [];
-  return ignoreScopes;
+    const ignoreScopesInput = core.getInput('ignore');
+    const ignoreScopes = ignoreScopesInput ? ignoreScopesInput.split('\n') : [];
+    return ignoreScopes;
 }

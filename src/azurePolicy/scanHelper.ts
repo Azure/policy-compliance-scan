@@ -20,8 +20,8 @@ export interface ScanCompletionPoll {
 
 export async function triggerOnDemandScan(): Promise<ScanCompletionPoll[]> {
   const token = await getAccessToken();
-  const scopesInput = core.getInput("scopes");
-  const scopes = scopesInput ? scopesInput.split("\n") : [];
+  const scopesInput = core.getInput('resource');
+  const scopes = scopesInput ? scopesInput.split('\n') : [];
 
   let polls: ScanCompletionPoll[] = [];
   for (const scope of scopes) {
