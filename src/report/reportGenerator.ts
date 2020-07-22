@@ -22,6 +22,8 @@ const TITLE_COMPLIANCE_STATE = "COMPLIANCE_STATE";
 const TITLE_POLICY_EVAL = "POLICY_EVALUATION";
 const MAX_LOG_ROWS_VAR = 'MAX_LOG_ROWS';
 const DEFAULT_MAX_LOG_ROWS = 250;
+const ALL_RESOURCE_COMPLIANT = "All resources are compliant";
+const RESOURCES_NOT_COMPLIANT = "One or more resources were non-compliant";
 
 export async function generateSummary(): Promise<void> {
   //Get intermediate file path to store success records
@@ -34,15 +36,23 @@ export async function generateSummary(): Promise<void> {
     //Console print and csv publish
     printPartitionedText(`Policy compliance scan report:: Total records : ${nonCompliantResources.length}`);
     let csv_object = printFormattedOutput(nonCompliantResources);
-    const skipArtifacts = core.getInput('skip-artifacts').toLowerCase() == 'true' ? true : false;
+    const skipArtifacts = core.getInput('skip-report').toLowerCase() == 'true' ? true : false;
     if (!skipArtifacts) {
-      const csvName = core.getInput('csv-name');
+      const csvName = core.getInput('report-name');
       await createCSV(csv_object, csvName);
     }
-    throw Error("One or more resources were non-compliant");
+
+    // Check if we need to fail the action
+    const ignoreScopesInput = core.getInput('ignore');
+    if (ignoreScopesInput && ignoreScopesInput.toLowerCase() == 'all') {
+      printPartitionedText(RESOURCES_NOT_COMPLIANT);
+    }
+    else {
+      throw Error(RESOURCES_NOT_COMPLIANT);
+    }
   }
   else {
-    printPartitionedText('All resources are compliant');
+    printPartitionedText(ALL_RESOURCE_COMPLIANT);
   }
 }
 
@@ -88,7 +98,7 @@ function getConfigForTable(widths: number[]): any {
 }
 
 export function printFormattedOutput(data: any[]): any[] {
-  const skipArtifacts = core.getInput('skip-artifacts') == 'true' ? true : false;
+  const skipArtifacts = core.getInput('skip-report') == 'true' ? true : false;
   let maxLogRowsEnvVar = parseEnvNumber(MAX_LOG_ROWS_VAR);
   let maxLogRecords = maxLogRowsEnvVar == undefined ? DEFAULT_MAX_LOG_ROWS : maxLogRowsEnvVar;
   //Number.parseInt(core.getInput('max-log-records'));

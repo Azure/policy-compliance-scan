@@ -5,7 +5,7 @@ import { pollForCompletion, ScanCompletionPoll, triggerOnDemandScan } from './az
 export async function run() {
   try {
     // Validate scope input before proceeding
-    const scopesInput = core.getInput('scopes');
+    const scopesInput = core.getInput('resource');
     if (!scopesInput) {
       core.setFailed('No scopes supplied for scanning.');
       return;

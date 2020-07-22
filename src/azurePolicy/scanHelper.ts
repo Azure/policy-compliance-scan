@@ -12,7 +12,7 @@ export interface ScanCompletionPoll {
 
 export async function triggerOnDemandScan(): Promise<ScanCompletionPoll[]> {
   const token = await getAccessToken();
-  const scopesInput = core.getInput('scopes');
+  const scopesInput = core.getInput('resource');
   const scopes = scopesInput ? scopesInput.split('\n') : [];
 
   let polls: ScanCompletionPoll[] = [];
