@@ -24,7 +24,7 @@ export function ignoreScope(scope: string): boolean {
 }
 
 function getIgnoreScopes(): string[] {
-  const ignoreScopesInput = core.getInput("ignore");
+  const ignoreScopesInput = core.getInput("scopes-ignore");
   const ignoreScopes = ignoreScopesInput ? ignoreScopesInput.split("\n") : [];
   return ignoreScopes;
 }
