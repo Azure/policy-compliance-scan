@@ -7,17 +7,17 @@ inputs:
   scopes-ignore:
     description: "Optional. Takes full identifier for one or more azure resources, resource groups(followed by /*). If the resources are found non-compliant after the scan completion, the action fails. However, in this input you can specify resources or resource groups for which the compliance state will be ignored. The action will pass irrespective of the compliance state of these resources. In case you want the action to always pass irrespective of the compliance state of resources, you can set its value as \'all\'."
     required: false
-  report-name:
-    description: "Optional. The filename for the CSV to be uploaded. Ignored if skip-report is set to true."
-    required: false
-  skip-report:
-    description: "Optional. Defaults to false. If false, the action will upload a CSV file containing a list of resources that are non-compliant after the triggered scan is complete. The CSV file can be downloaded as an artifact from the workflow run for manual analysis. Note that the number of rows in CSV are capped at 100,000."
-    required: false
-    default: false
   wait:
     description: "Optional. Depending on the breadth, the time taken for compliance scan can range from a few minutes to several hours. By default, the action will wait for the compliance scan to complete and succeed or fail based on the compliance state of resources. However, you can mark this input as false, in which case the action will trigger the compliance scan and succeed immediately. The status of the triggered scan and the compliance state of resources would have to be then viewed in activity log of the resource in Azure portal."
     required: false
     default: true
+  skip-report:
+    description: "Optional. Defaults to false. If false, the action will upload a CSV file containing a list of resources that are non-compliant after the triggered scan is complete. The CSV file can be downloaded as an artifact from the workflow run for manual analysis. Note that the number of rows in CSV are capped at 100,000."
+    required: false
+    default: false
+  report-name:
+    description: "Optional. The filename for the CSV to be uploaded. Ignored if skip-report is set to true."
+    required: false
 runs:
   using: "node12"
   main: "lib/run.js"
