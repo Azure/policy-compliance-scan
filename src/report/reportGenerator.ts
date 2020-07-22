@@ -39,22 +39,21 @@ export async function generateSummary(): Promise<void> {
     );
     let csv_object = printFormattedOutput(nonCompliantResources);
 
-    const skipArtifacts = core.getInput('skip-report').toLowerCase() == 'true' ? true : false;
+    const skipArtifacts =
+      core.getInput("skip-report").toLowerCase() == "true" ? true : false;
     if (!skipArtifacts) {
-      const csvName = core.getInput('report-name');
+      const csvName = core.getInput("report-name");
       await createCSV(csv_object, csvName);
     }
 
     // Check if we need to fail the action
-    const ignoreScopesInput = core.getInput('ignore');
-    if (ignoreScopesInput && ignoreScopesInput.toLowerCase() == 'all') {
+    const ignoreScopesInput = core.getInput("ignore");
+    if (ignoreScopesInput && ignoreScopesInput.toLowerCase() == "all") {
       printPartitionedText(RESOURCES_NOT_COMPLIANT);
-    }
-    else {
+    } else {
       throw Error(RESOURCES_NOT_COMPLIANT);
     }
-  }
-  else {
+  } else {
     printPartitionedText(ALL_RESOURCE_COMPLIANT);
   }
 }
@@ -101,7 +100,7 @@ function getConfigForTable(widths: number[]): any {
 }
 
 export function printFormattedOutput(data: any[]): any[] {
-  const skipArtifacts = core.getInput('skip-report') == 'true' ? true : false;
+  const skipArtifacts = core.getInput("skip-report") == "true" ? true : false;
   let maxLogRowsEnvVar = parseEnvNumber(MAX_LOG_ROWS_VAR);
   let maxLogRecords =
     maxLogRowsEnvVar == undefined ? DEFAULT_MAX_LOG_ROWS : maxLogRowsEnvVar;
