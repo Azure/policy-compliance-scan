@@ -11,7 +11,7 @@ export function ignoreScope(scope: string): boolean {
     if (ignoreScope.endsWith("/*")) {
       // Ignore input ends with '/*'. We need to ignore if the given scope starts with this pattern.
       let startPattern: string = ignoreScope
-        .substr(0, ignoreScope.length - 2)
+        .substr(0, ignoreScope.length - 1)
         .toLowerCase();
       if (scope.toLowerCase().startsWith(startPattern)) {
         return true;
