@@ -19,6 +19,6 @@ jobs:
       - name: Check resource compliance
         uses: Josh-01/policy-compliance-scan@dev/v0
         with:
-          scopes: |
+          resource: |
             /subscriptions/c00d16c7-6c1f-4c03-9be1-6934a4c49682
-          skip-artifacts: false
+          skip-report: false
