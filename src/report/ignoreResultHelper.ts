@@ -8,18 +8,17 @@ export function ignoreScope(scope: string): boolean {
 
     const ignoreList: string[] = getIgnoreScopes();
 
-    for (const ignoreScope of ignoreList) {
-        if (ignoreScope.endsWith('/*')) {
-            // Ignore input ends with '/*'. We need to ignore if the given scope starts with this pattern.
-            let startPattern:string = ignoreScope.substr(0, ignoreScope.length - 2).toLowerCase();
-            if (scope.toLowerCase().startsWith(startPattern)) {
-                return true;
-            }
-        }
-        else if (scope.toLowerCase() == ignoreScope.toLowerCase()) {
-            return true;
-        }
-    }
+  for (const ignoreScope of ignoreList) {
+      if (ignoreScope.endsWith('/*')) {
+          // Ignore input ends with '/*'. We need to ignore if the given scope starts with this pattern.
+          let startPattern:string = ignoreScope.substr(0, ignoreScope.length - 2).toLowerCase();
+          if (scope.toLowerCase().startsWith(startPattern)) {
+              return true;
+          }
+      }
+      else if (scope.toLowerCase() == ignoreScope.toLowerCase()) {
+          return true;
+      }
   }
   return false;
 }
