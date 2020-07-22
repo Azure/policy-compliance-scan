@@ -1,6 +1,4 @@
 
-# [DOC IN PROGRESS]
-
 # GitHub Action for Azure Policy Compliance Scan
 
 With the Azure Policy Compliance Scan action, you can now easily trigger a [on demand  scan](https://docs.microsoft.com/en-us/azure/governance/policy/how-to/get-compliance-data#on-demand-evaluation-scan) from your GitHub workflow on one or multiple resources, resource groups or subscriptions, and continue/fail the workflow based on the compliance state of resources. You can also use this Github Action to generate a report on the compliance state of scanned resources for further analysis or archiving.
@@ -131,7 +129,6 @@ Follow the steps to configure the secret:
   * Run the below Azure cli command.
 
 
-[TODO] - check if addtionals permissions are required
 ```bash  
   
    az ad sp create-for-rbac --name "myApp" --role contributor \
@@ -151,16 +148,9 @@ Follow the steps to configure the secret:
   }
   
 ```
-  * Paste the contents of the above [az cli](https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest) command as the value of  secret variable, for example 'AZURE_CREDENTIALS'
-  * You can further scope down the Azure Credentials to the Web App using scope attribute. For example, 
-  ```
-   az ad sp create-for-rbac --name "myApp" --role contributor \
-                            --scopes /subscriptions/{subscription-id}/resourceGroups/{resource-group}/providers/Microsoft.Web/sites/{app-name} \
-                            --sdk-auth
+  * Paste the contents of the above [az cli](https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest) command as the value of  secret variable, for example 'AZURE_CREDENTIALS'(Refer to the examples above)
+  
 
-  # Replace {subscription-id}, {resource-group}, and {app-name} with the names of your subscription, resource group, and Azure Web App.
-```
-  * Now in the workflow file in your branch: `.github/workflows/workflow.yml` replace the secret in Azure login action with your secret (Refer to the examples above)
 
 
 # Contributing
