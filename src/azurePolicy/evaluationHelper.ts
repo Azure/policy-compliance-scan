@@ -16,7 +16,7 @@ import {
 
 const BATCH_MAX_SIZE = 500;
 const BATCH_POLL_INTERVAL: number = 60 * 1000; // 1 min = 60 * 1000ms
-const BATCH_POLL_TIMEOUT_DURATION: number = 120 * 60 * 1000; //120 mins
+const BATCH_POLL_TIMEOUT_DURATION: number = 120 * 60 * 1000; //5 mins
 
 const CONDITION_MAP = {
   containsKey: "Current value must contain the target value as a key.",
@@ -116,10 +116,7 @@ export async function batchCall(
   }
   return await sendRequest(batchWebRequest)
     .then((response: WebResponse) => {
-      if (
-        response.statusCode == StatusCodes.OK.valueOf() ||
-        response.statusCode == StatusCodes.ACCEPTED.valueOf()
-      ) {
+      if (response.statusCode == 200 || response.statusCode == 202) {
         core.debug(
           `Batch response :: Status: ${response.statusCode} Location: ${response.headers["location"]} Body: ${response.body}`
         );
@@ -152,7 +149,7 @@ async function processCreatedResponses(
           //Way to do async forEach
           values = [];
           if (
-            pendingResponse.statusCode == StatusCodes.OK.valueOf() &&
+            pendingResponse.statusCode == 200 &&
             pendingResponse != null &&
             pendingResponse.body != null
           ) {
@@ -211,11 +208,11 @@ async function pollPendingResponses(
               ? pendingResponse.headers.location
               : pendingResponse.url;
           return await batchCall(url, "GET", [], token).then((response) => {
-            if (response.statusCode == StatusCodes.OK.valueOf()) {
+            if (response.statusCode == 200) {
               //Will be saved in next iteration
               return response;
             }
-            if (response.statusCode == StatusCodes.ACCEPTED.valueOf()) {
+            if (response.statusCode == 202) {
               //Will be polled in next iteration
               return pendingResponse;
             }
@@ -293,11 +290,11 @@ export async function computeBatchCalls(
     }, BATCH_POLL_TIMEOUT_DURATION);
 
     pendingResponses = batchResponses.filter((response) => {
-      return response.statusCode == StatusCodes.ACCEPTED.valueOf();
+      return response.statusCode == 202;
     });
     completedResponses.push(
       ...batchResponses.filter((response) => {
-        return response.statusCode == StatusCodes.OK.valueOf();
+        return response.statusCode == 200;
       })
     );
 
@@ -315,11 +312,11 @@ export async function computeBatchCalls(
           BATCH_POLL_INTERVAL
         ).then((polledResponses) => {
           pendingResponses = polledResponses.filter((response) => {
-            return response.statusCode == StatusCodes.ACCEPTED.valueOf();
+            return response.statusCode == 202;
           });
           completedResponses.push(
             ...polledResponses.filter((response) => {
-              return response.statusCode == StatusCodes.OK.valueOf();
+              return response.statusCode == 200;
             })
           );
         });
@@ -364,11 +361,11 @@ export async function computeBatchCalls(
         await pollPendingResponses(pendingResponses, token, 0).then(
           (polledResponses) => {
             pendingResponses = polledResponses.filter((response) => {
-              return response.statusCode == StatusCodes.ACCEPTED.valueOf();
+              return response.statusCode == 202;
             }); //SHOULD BE ZERO HERE
             completedResponses.push(
               ...polledResponses.filter((response) => {
-                return response.statusCode == StatusCodes.OK.valueOf();
+                return response.statusCode == 200;
               })
             );
           }
@@ -423,7 +420,7 @@ export async function saveScanResult(polls: any[], token: string) {
   await computeBatchCalls(scanResultUrl, "POST", null, polls, token)
     .then((responseList) => {
       responseList.forEach((resultsObject) => {
-        if (resultsObject.httpStatusCode == StatusCodes.OK.valueOf()) {
+        if (resultsObject.httpStatusCode == 200) {
           resourceIds.push(
             ...resultsObject.content.value.map((result) => {
               return result.resourceId;
@@ -467,7 +464,7 @@ export async function saveScanResult(polls: any[], token: string) {
   await computeBatchCalls(policyEvalUrl, "POST", null, scopes, token)
     .then((responseList) => {
       responseList.forEach((resultsObject) => {
-        if (resultsObject.httpStatusCode == StatusCodes.OK.valueOf()) {
+        if (resultsObject.httpStatusCode == 200) {
           scanResults.push(
             ...resultsObject.content.value
               .filter((result) => {
@@ -507,9 +504,6 @@ export async function saveScanResult(polls: any[], token: string) {
     if (scanResults.length > 0) {
       const scanReportPath = fileHelper.getScanReportPath();
       fs.appendFileSync(scanReportPath, JSON.stringify(scanResults, null, 2));
-      printPartitionedDebugLog(
-        `Saved ${scanResults.length} records to intermediate file.`
-      );
     }
   } catch (error) {
     throw Error(
