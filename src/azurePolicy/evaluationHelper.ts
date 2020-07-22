@@ -504,6 +504,7 @@ export async function saveScanResult(polls: any[], token: string) {
     if (scanResults.length > 0) {
       const scanReportPath = fileHelper.getScanReportPath();
       fs.appendFileSync(scanReportPath, JSON.stringify(scanResults, null, 2));
+      printPartitionedDebugLog(`Saved ${scanResults.length} records to intermediate file.`);
     }
   } catch (error) {
     throw Error(
