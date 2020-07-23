@@ -437,11 +437,13 @@ export async function saveScanResult(polls: any[], token: string) {
   // Getting unique scopes and ignoring
   let result: boolean = true;
   let isResourceIgnored: boolean = false;
-  printPartitionedText(`Ignoring resourceIds : `);
+  const ignoreAllScopes: boolean = core.getInput("scopes-ignore") ? core.getInput("scopes-ignore").toLowerCase() == "all" : false;
+
+  printPartitionedText(`Ignoring resources : `);
   scopes = [...new Set(resourceIds)]
     .filter((item) => {
       result = true;
-      if (ignoreScope(item)) {
+      if (!ignoreAllScopes && ignoreScope(item)) {
         console.log(`${item}`);
         result = false;
         isResourceIgnored = true;
@@ -452,8 +454,11 @@ export async function saveScanResult(polls: any[], token: string) {
       return { scope: item };
     });
 
-  if (!isResourceIgnored) {
-    console.log(`No resourceId ignored`);
+  if (ignoreAllScopes) {
+    printPartitionedText(`All resources ignored`);
+  }
+  else if (!isResourceIgnored) {
+    printPartitionedText(`No resources ignored`);
   }
 
   core.debug("# of Unique resourceIds scanned : " + scopes.length);

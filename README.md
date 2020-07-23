@@ -21,7 +21,7 @@ The definition of this Github Action is in [action.yml](https://github.com/Azure
 
 ## Dependencies on other Github Actions
 
-* Azure Login Action: Authenticate using [Azure Login](https://github.com/Azure/login)  action. The Policy Compliance Scan action assumes that the underlying SPN credentials have sufficient permissions to trigger azure policy compliance scan. Once login is done, the next set of Actions in the workflow can perform tasks such as triggering the compliance scan and fetching the compliance state of resources.
+* Azure Login Action: Authenticate using [Azure Login](https://github.com/Azure/login)  action. The Policy Compliance Scan action assumes that Azure Login is done using an Azure service principal that has sufficient permissions to trigger azure policy compliance scan on selected scopes. Once login is done, the next set of Actions in the workflow can perform tasks such as triggering the compliance scan and fetching the compliance state of resources. For more details, checkout 'Configure credentials for Azure login action' section in this file or alternatively you can refer the full [documentation](https://github.com/Azure/login) of Azure Login Action.
 
   
 ### Sample workflow to trigger a scan on a subscription 
@@ -45,8 +45,8 @@ jobs:
     - name: Check for resource compliance
       uses: azure/policy-compliance-scan@v0
       with:
-        scopes: 
-        - /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/
+        scopes: |
+          /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         
 ```
 The above workflow will trigger a policy compliance scan on the provided subscription, wait till the scan is complete, fetch the latest compliance state of resources and upload a CSV file containing the list of non compliant resources and the associated policy assignments. The action will fail if there are any non-compliant resources.
@@ -74,10 +74,10 @@ jobs:
     - name: Check for resource compliance
       uses: azure/policy-compliance-scan@v0
       with:
-        scopes: 
-        - /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/QA               
-        scopes-ignore:
-        - /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/QA/providers/Microsoft.Web/sites/demoApp
+        scopes: |
+          /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/QA               
+        scopes-ignore: |
+          /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/QA/providers/Microsoft.Web/sites/demoApp
         
 ```
 The above workflow will trigger a policy compliance scan on the 'QA' resource group. After the scan is complete, it will fetch the compliance state of resources. The action will fail if there are any non-compliant resources except for 'demoApp' resource.
@@ -104,38 +104,34 @@ jobs:
     - name: Check for resource compliance
       uses: azure/policy-compliance-scan@v0
       with:
-        scopes: 
-        - /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/
+        scopes: |
+          /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         wait: false
     - run: |
         echo 'Running scripts...'
         
 ```
-The above workflow will trigger a policy compliance scan on the provided subscription and proceed to the next step without waiting for the compliance scan to be complete. In this case the triggering of scan is successful, then the action will be marked as passed. To see the progress/result of scan, the user has to refer the Azure Portal UI.[TODO]
-
+The above workflow will trigger a policy compliance scan on the provided subscription and proceed to the next step without waiting for the compliance scan to be complete. In this case the triggering of scan is successful, then the action will be marked as passed. To see the progress/result of scan, the user can refer the activity logs for the subscription or resource group.
 
 
 ## Configure credentials for Azure login action:
 
-For credentials like Azure Service Principal add them as [secrets](https://help.github.com/en/articles/virtual-environments-for-github-actions#creating-and-using-secrets-encrypted-variables) in the GitHub repository and then use them in the workflow.
+With the Azure login Action, you can perform an Azure login using [Azure service principal](https://docs.microsoft.com/en-us/azure/active-directory/develop/app-objects-and-service-principals). The credentials of Azure Service Principal can be added as [secrets](https://help.github.com/en/articles/virtual-environments-for-github-actions#creating-and-using-secrets-encrypted-variables) in the GitHub repository and then used in the workflow. Follow the below steps to generate credentials and store in github.
 
 
-#### Prerequisites:
-  * You should have installed Azure cli on your local machine to run the command or use the cloudshell in the Azure portal. To install       Azure cli, follow [Install Azure Cli](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest). To use       cloudshell, follow [CloudShell Quickstart](https://docs.microsoft.com/en-us/azure/cloud-shell/quickstart).
+  * Prerequisite: You should have installed Azure cli on your local machine to run the command or use the cloudshell in the Azure portal. To install Azure cli, follow [Install Azure Cli](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest). To use cloudshell, follow [CloudShell Quickstart](https://docs.microsoft.com/en-us/azure/cloud-shell/quickstart). After you have one of the above ready, follow these steps: 
   
-
-Follow the steps to configure the secret:
-  * Define a new secret under your repository settings, Add secret menu
-  * Run the below Azure cli command.
+  
+  * Run the below Azure cli command and copy the output JSON object to your clipboard.
 
 
 ```bash  
   
    az ad sp create-for-rbac --name "myApp" --role contributor \
-                            --scopes /subscriptions/{subscription-id}/resourceGroups/{resource-group} \
+                            --scopes /subscriptions/{subscription-id} \
                             --sdk-auth
                             
-  # Replace {subscription-id}, {resource-group} with the subscription, resource group details of the WebApp
+  # Replace {subscription-id} with the subscription identifiers
   
   # The command should output a JSON object similar to this:
 
@@ -148,9 +144,35 @@ Follow the steps to configure the secret:
   }
   
 ```
-  * Paste the contents of the above [az cli](https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest) command as the value of  secret variable, for example 'AZURE_CREDENTIALS'(Refer to the examples above)
-  
+  * Define a 'New secret' under your GitHub repository settings -> 'Secrets' menu. Lets name it 'AZURE_CREDENTIALS'.
+  * Paste the contents of the clipboard as the value of  the above secret variable.
+  * Use the secret variable in the Azure Login Action(Refer to the examples above)
 
+
+If needed, you can modify the Azure CLI command to further reduce the scope for which permissions are provided. Here is the command that gives contributor access to only a resource group.
+
+```bash  
+  
+   az ad sp create-for-rbac --name "myApp" --role contributor \
+                            --scopes /subscriptions/{subscription-id}/resourceGroups/{resource-group} \
+                            --sdk-auth
+                            
+  # Replace {subscription-id}, {resource-group} with the subscription and resource group identifiers.
+  
+```
+
+You can also provide permissions to multiple scopes using the Azure CLI command: 
+
+```bash  
+  
+   az ad sp create-for-rbac --name "myApp" --role contributor \
+                            --scopes /subscriptions/{subscription-id}/resourceGroups/{resource-group1} \
+                            /subscriptions/{subscription-id}/resourceGroups/{resource-group2} \
+                            --sdk-auth
+                            
+  # Replace {subscription-id}, {resource-group1}, {resource-group2} with the subscription and resource group identifiers.
+  
+```
 
 
 # Contributing
