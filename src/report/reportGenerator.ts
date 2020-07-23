@@ -47,8 +47,8 @@ export async function generateSummary(): Promise<void> {
     }
 
     // Check if we need to fail the action
-    const ignoreScopesInput = core.getInput("scopes-ignore");
-    if (ignoreScopesInput && ignoreScopesInput.toLowerCase() == "all") {
+    const ignoreAllScopes: boolean = core.getInput("scopes-ignore") ? core.getInput("scopes-ignore").toLowerCase() == "all" : false;
+    if (ignoreAllScopes) {
       printPartitionedText(RESOURCES_NOT_COMPLIANT);
     } else {
       throw Error(RESOURCES_NOT_COMPLIANT);

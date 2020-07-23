@@ -5,6 +5,7 @@ import {
   ScanCompletionPoll,
   triggerOnDemandScan,
 } from "./azurePolicy/scanHelper";
+import { printPartitionedText } from "./utils/utilities";
 
 export async function run() {
   try {
@@ -27,6 +28,9 @@ export async function run() {
 
       //Generate compliance scan summary
       await generateSummary();
+    }
+    else {
+      printPartitionedText("To view the status of the triggered scan and the compliance state of resources please checkout the activity log of the scope in Azure portal: https://docs.microsoft.com/en-us/azure/azure-monitor/platform/activity-log.");
     }
   } catch (error) {
     core.setFailed(error.message);
