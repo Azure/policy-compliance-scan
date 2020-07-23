@@ -23,10 +23,12 @@ export function getFileJson(path: string): any {
     rawContent = fs.readFileSync(path, "utf8");
     let savedDataList: any[] = [];
     let savedData: any[] = [];
-    savedDataList = JSON.parse(rawContent);
+    if (rawContent && rawContent.length > 0) {
+      savedDataList = JSON.parse(rawContent);
+    }
     printPartitionedDebugLog(`Reading from json file`);
     if (savedDataList != null && savedDataList.length > 0) {
-      savedDataList.forEach(item => {
+      savedDataList.forEach((item) => {
         savedData.push(...item);
       });
     }
