@@ -45,8 +45,8 @@ jobs:
     - name: Check for resource compliance
       uses: azure/policy-compliance-scan@v0
       with:
-        scopes: 
-        - /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/
+        scopes: |
+          /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/
         
 ```
 The above workflow will trigger a policy compliance scan on the provided subscription, wait till the scan is complete, fetch the latest compliance state of resources and upload a CSV file containing the list of non compliant resources and the associated policy assignments. The action will fail if there are any non-compliant resources.
@@ -74,10 +74,10 @@ jobs:
     - name: Check for resource compliance
       uses: azure/policy-compliance-scan@v0
       with:
-        scopes: 
-        - /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/QA               
-        scopes-ignore:
-        - /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/QA/providers/Microsoft.Web/sites/demoApp
+        scopes: |
+          /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/QA               
+        scopes-ignore: |
+          /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/QA/providers/Microsoft.Web/sites/demoApp
         
 ```
 The above workflow will trigger a policy compliance scan on the 'QA' resource group. After the scan is complete, it will fetch the compliance state of resources. The action will fail if there are any non-compliant resources except for 'demoApp' resource.
@@ -104,8 +104,8 @@ jobs:
     - name: Check for resource compliance
       uses: azure/policy-compliance-scan@v0
       with:
-        scopes: 
-        - /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/
+        scopes: |
+          /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/
         wait: false
     - run: |
         echo 'Running scripts...'
@@ -132,10 +132,10 @@ Follow the steps to configure the secret:
 ```bash  
   
    az ad sp create-for-rbac --name "myApp" --role contributor \
-                            --scopes /subscriptions/{subscription-id}/resourceGroups/{resource-group} \
+                            --scopes /subscriptions/{subscription-id} \
                             --sdk-auth
                             
-  # Replace {subscription-id}, {resource-group} with the subscription, resource group details of the WebApp
+  # Replace {subscription-id} with the subscription identifiers
   
   # The command should output a JSON object similar to this:
 
@@ -149,8 +149,19 @@ Follow the steps to configure the secret:
   
 ```
   * Paste the contents of the above [az cli](https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest) command as the value of  secret variable, for example 'AZURE_CREDENTIALS'(Refer to the examples above)
-  
 
+
+You can further reduce the scope for which permissions are provided for example a resource group by using the following command
+
+```bash  
+  
+   az ad sp create-for-rbac --name "myApp" --role contributor \
+                            --scopes /subscriptions/{subscription-id}/resourceGroups/{resource-group} \
+                            --sdk-auth
+                            
+  # Replace {subscription-id}, {resource-group} with the subscription and resource group identifiers.
+  
+```
 
 
 # Contributing
