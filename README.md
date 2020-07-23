@@ -149,7 +149,7 @@ With the Azure login Action, you can perform an Azure login using [Azure service
   * Use the secret variable in the Azure Login Action(Refer to the examples above)
 
 
-You can further reduce the scope for which permissions are provided for example a resource group by using the following command
+If needed, you can modify the Azure CLI command to further reduce the scope for which permissions are provided. Here is the command that gives contributor access to only a resource group.
 
 ```bash  
   
