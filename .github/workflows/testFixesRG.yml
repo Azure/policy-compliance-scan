@@ -1,0 +1,25 @@
+name: Test fixes for branch 2
+on:
+  push: 
+    branches: 
+      - dev/v0
+    paths:
+      - .github/workflows/testFixesRG.yml
+jobs:
+  build:
+    name: AzPac
+    runs-on: ubuntu-latest
+    steps:          
+      - name: Login via Az module
+        continue-on-error: true
+        uses: azure/login@v1.1
+        with:
+         creds: ${{secrets.RMDEVINT}}
+        
+      - name: Check resource compliance
+        uses: Josh-01/policy-compliance-scan@dev/v0
+        with:
+          scopes: |
+            /subscriptions/c00d16c7-6c1f-4c03-9be1-6934a4c49682/resourceGroups/aj-rg
+            /subscriptions/c00d16c7-6c1f-4c03-9be1-6934a4c49682/resourceGroups/az-pac-dev
+          skip-report: false
