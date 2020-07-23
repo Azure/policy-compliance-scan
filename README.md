@@ -161,7 +161,7 @@ If needed, you can modify the Azure CLI command to further reduce the scope for 
   
 ```
 
-You can also provide permissions to multiple resources using the Azure CLI command. 
+You can also provide permissions to multiple scopes using the Azure CLI command: 
 
 ```bash  
   
