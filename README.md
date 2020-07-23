@@ -21,7 +21,7 @@ The definition of this Github Action is in [action.yml](https://github.com/Azure
 
 ## Dependencies on other Github Actions
 
-* Azure Login Action: Authenticate using [Azure Login](https://github.com/Azure/login)  action. The Policy Compliance Scan action assumes that Azure Login is done using an Azure service principal that has sufficient permissions to trigger azure policy compliance scan on selected scopes. Once login is done, the next set of Actions in the workflow can perform tasks such as triggering the compliance scan and fetching the compliance state of resources. For more details, checkout 'Configure credentials for Azure login action' section in this file or alternatively you can refer the full documentation of [Azure Login Action](https://github.com/Azure/login)
+* Azure Login Action: Authenticate using [Azure Login](https://github.com/Azure/login)  action. The Policy Compliance Scan action assumes that Azure Login is done using an Azure service principal that has sufficient permissions to trigger azure policy compliance scan on selected scopes. Once login is done, the next set of Actions in the workflow can perform tasks such as triggering the compliance scan and fetching the compliance state of resources. For more details, checkout 'Configure credentials for Azure login action' section in this file or alternatively you can refer the full [documentation](https://github.com/Azure/login) of Azure Login Action.
 
   
 ### Sample workflow to trigger a scan on a subscription 
