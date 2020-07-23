@@ -1,0 +1,19 @@
+name: QA
+on: push
+
+jobs:
+  assess-policy-compliance:    
+    runs-on: ubuntu-latest
+    steps:
+    # Azure Login       
+    - name: Login to Azure
+      uses: azure/login@v1.1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS_rai}} 
+    
+    - name: Check for resource compliance
+      uses: azure/policy-compliance-scan@dev/v0
+      with:
+        scopes: |
+          /subscriptions/afc11291-9826-46be-b852-70349146ddf8/              
+        wait: false
