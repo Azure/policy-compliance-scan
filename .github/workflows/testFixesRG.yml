@@ -19,7 +19,7 @@ jobs:
       - name: Check resource compliance
         uses: Josh-01/policy-compliance-scan@dev/v0
         with:
-          resource: |
+          scopes: |
             /subscriptions/c00d16c7-6c1f-4c03-9be1-6934a4c49682/resourceGroups/aj-rg
             /subscriptions/c00d16c7-6c1f-4c03-9be1-6934a4c49682/resourceGroups/az-pac-dev
           skip-report: false
