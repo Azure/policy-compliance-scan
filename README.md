@@ -105,14 +105,13 @@ jobs:
       uses: azure/policy-compliance-scan@v0
       with:
         scopes: |
-          /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/
+          /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         wait: false
     - run: |
         echo 'Running scripts...'
         
 ```
-The above workflow will trigger a policy compliance scan on the provided subscription and proceed to the next step without waiting for the compliance scan to be complete. In this case the triggering of scan is successful, then the action will be marked as passed. To see the progress/result of scan, the user has to refer the Azure Portal UI.[TODO]
-
+The above workflow will trigger a policy compliance scan on the provided subscription and proceed to the next step without waiting for the compliance scan to be complete. In this case the triggering of scan is successful, then the action will be marked as passed. To see the progress/result of scan, the user can refer the activity logs for the subscription or resource group.
 
 
 ## Configure credentials for Azure login action:
