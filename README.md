@@ -161,6 +161,18 @@ If needed, you can modify the Azure CLI command to further reduce the scope for 
   
 ```
 
+You can also provide permissions to multiple resources using the Azure CLI command. 
+
+```bash  
+  
+   az ad sp create-for-rbac --name "myApp" --role contributor \
+                            --scopes /subscriptions/{subscription-id}/resourceGroups/{resource-group1} \
+                            /subscriptions/{subscription-id}/resourceGroups/{resource-group2} \
+                            --sdk-auth
+                            
+  # Replace {subscription-id}, {resource-group1}, {resource-group2} with the subscription and resource group identifiers.
+  
+```
 
 
 # Contributing
