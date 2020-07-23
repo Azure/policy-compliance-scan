@@ -46,7 +46,7 @@ jobs:
       uses: azure/policy-compliance-scan@v0
       with:
         scopes: |
-          /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/
+          /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         
 ```
 The above workflow will trigger a policy compliance scan on the provided subscription, wait till the scan is complete, fetch the latest compliance state of resources and upload a CSV file containing the list of non compliant resources and the associated policy assignments. The action will fail if there are any non-compliant resources.
