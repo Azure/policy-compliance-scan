@@ -21,7 +21,7 @@ The definition of this Github Action is in [action.yml](https://github.com/Azure
 
 ## Dependencies on other Github Actions
 
-* Azure Login Action: Authenticate using [Azure Login](https://github.com/Azure/login)  action. The Policy Compliance Scan action assumes that the underlying SPN credentials have sufficient permissions to trigger azure policy compliance scan. Once login is done, the next set of Actions in the workflow can perform tasks such as triggering the compliance scan and fetching the compliance state of resources.
+* Azure Login Action: Authenticate using [Azure Login](https://github.com/Azure/login)  action. The Policy Compliance Scan action assumes that Azure Login is done using an Azure service principal that has sufficient permissions to trigger azure policy compliance scan on selected scopes. Once login is done, the next set of Actions in the workflow can perform tasks such as triggering the compliance scan and fetching the compliance state of resources. For more details, checkout 'Configure credentials for Azure login action' section in this file or alternatively you can refer the full documentation of [Azure Login Action](https://github.com/Azure/login)
 
   
 ### Sample workflow to trigger a scan on a subscription 
@@ -116,16 +116,13 @@ The above workflow will trigger a policy compliance scan on the provided subscri
 
 ## Configure credentials for Azure login action:
 
-For credentials like Azure Service Principal add them as [secrets](https://help.github.com/en/articles/virtual-environments-for-github-actions#creating-and-using-secrets-encrypted-variables) in the GitHub repository and then use them in the workflow.
+With the Azure login Action, you can perform an Azure login using [Azure service principal](https://docs.microsoft.com/en-us/azure/active-directory/develop/app-objects-and-service-principals). The credentials of Azure Service Principal can be added as [secrets](https://help.github.com/en/articles/virtual-environments-for-github-actions#creating-and-using-secrets-encrypted-variables) in the GitHub repository and then used in the workflow. Follow the below steps to generate credentials and store in github.
 
 
-#### Prerequisites:
-  * You should have installed Azure cli on your local machine to run the command or use the cloudshell in the Azure portal. To install       Azure cli, follow [Install Azure Cli](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest). To use       cloudshell, follow [CloudShell Quickstart](https://docs.microsoft.com/en-us/azure/cloud-shell/quickstart).
+  * Prerequisite: You should have installed Azure cli on your local machine to run the command or use the cloudshell in the Azure portal. To install Azure cli, follow [Install Azure Cli](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest). To use cloudshell, follow [CloudShell Quickstart](https://docs.microsoft.com/en-us/azure/cloud-shell/quickstart). After you have one of the above ready, follow these steps: 
   
-
-Follow the steps to configure the secret:
-  * Define a new secret under your repository settings, Add secret menu
-  * Run the below Azure cli command.
+  
+  * Run the below Azure cli command and copy the output JSON object to your clipboard.
 
 
 ```bash  
@@ -147,7 +144,9 @@ Follow the steps to configure the secret:
   }
   
 ```
-  * Paste the contents of the above [az cli](https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest) command as the value of  secret variable, for example 'AZURE_CREDENTIALS'(Refer to the examples above)
+  * Define a 'New secret' under your GitHub repository settings -> 'Secrets' menu. Lets name it 'AZURE_CREDENTIALS'.
+  * Paste the contents of the clipboard as the value of  the above secret variable.
+  * Use the secret variable in the Azure Login Action(Refer to the examples above)
 
 
 You can further reduce the scope for which permissions are provided for example a resource group by using the following command
@@ -161,6 +160,7 @@ You can further reduce the scope for which permissions are provided for example 
   # Replace {subscription-id}, {resource-group} with the subscription and resource group identifiers.
   
 ```
+
 
 
 # Contributing
