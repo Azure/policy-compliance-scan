@@ -508,8 +508,16 @@ export async function saveScanResult(polls: any[], token: string) {
   try {
     if (scanResults.length > 0) {
       const scanReportPath = fileHelper.getScanReportPath();
-      fs.appendFileSync(scanReportPath, JSON.stringify(scanResults, null, 2));
-      printPartitionedDebugLog(`Saved ${scanResults.length} records to intermediate file.`);
+      let rawContent = fs.readFileSync(scanReportPath, "utf8");
+      let savedData: any[] = [];
+      if(rawContent && rawContent.length > 0){
+        savedData = JSON.parse(rawContent);
+      }
+      savedData.push(scanResults);
+      fs.writeFileSync(scanReportPath, JSON.stringify(savedData, null, 2));
+      printPartitionedDebugLog(
+        `Saved ${scanResults.length} records to intermediate file.`
+      );
     }
   } catch (error) {
     throw Error(

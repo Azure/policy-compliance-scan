@@ -19,32 +19,23 @@ export function getScanReportPath(): string {
 
 export function getFileJson(path: string): any {
   let rawContent = "";
-  let offset = 0;
-  let start = 0;
-  let end = 0;
   try {
     rawContent = fs.readFileSync(path, "utf8");
+    let savedDataList: any[] = [];
     let savedData: any[] = [];
+    if (rawContent && rawContent.length > 0) {
+      savedDataList = JSON.parse(rawContent);
+    }
     printPartitionedDebugLog(`Reading from json file`);
-    if (rawContent != null && rawContent.length > 0) {
-      offset = 0;
-      start = rawContent.indexOf("[", offset);
-      end = rawContent.indexOf("]", offset) + 1;
-      while (start >= 0) {
-        savedData.push(...JSON.parse(rawContent.substring(start, end)));
-        core.debug(``);
-        offset = rawContent.indexOf("]", offset) + 1;
-        start = rawContent.indexOf("[", offset);
-        end = rawContent.indexOf("]", offset) + 1;
-      }
+    if (savedDataList != null && savedDataList.length > 0) {
+      savedDataList.forEach((item) => {
+        savedData.push(...item);
+      });
     }
     return savedData;
   } catch (ex) {
     throw new Error(
-      `An error occured while reading the contents of the file: ${path}. Error: ${ex}. JSON : ${rawContent.substring(
-        start,
-        end
-      )}`
+      `An error occured while reading the contents of the file: ${path}. Error: ${ex}. JSON : ${rawContent}`
     );
   }
 }
