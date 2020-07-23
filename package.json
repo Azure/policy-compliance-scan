@@ -1,0 +1,28 @@
+{
+  "name": "policy-compliance-scan",
+  "version": "0.0.0",
+  "main": "lib/run.js",
+  "scripts": {
+    "build": "tsc --outDir .\\lib\\ --rootDir .\\src\\",
+    "test": "jest",
+    "test-coverage": "jest --coverage"
+  },
+  "author": "GitHub",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^14.0.14",
+    "@types/jest": "^26.0.4",
+    "jest": "^25.5.4",
+    "ts-jest": "^25.5.1",
+    "typescript": "^3.9.5"
+  },
+  "dependencies": {
+    "@actions/artifact": "^0.3.2",
+    "@actions/core": "^1.2.4",
+    "@actions/exec": "^1.0.1",
+    "@actions/io": "^1.0.1",
+    "table": "5.4.6",
+    "typed-rest-client": "^1.5.0",
+    "uuid": "8.1.0"
+  }
+}

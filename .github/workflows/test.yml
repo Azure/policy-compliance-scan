@@ -1,0 +1,26 @@
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - 'releases/*'
+
+jobs:
+  build_test_job:
+    name: 'Build and test job'
+    runs-on: ${{ matrix.os }}
+    strategy:
+        matrix:
+          os: [windows-latest, ubuntu-latest, macos-latest]
+    steps:
+
+    - name: 'Checking out repo code'
+      uses: actions/checkout@v1
+
+    - name: 'Validate build'
+      run: |
+        npm install
+        npm build
+    - name: 'Run L0 tests'
+      run: |
+        npm run test
