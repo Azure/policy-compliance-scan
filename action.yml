@@ -1,5 +1,5 @@
-name: "policy-compliance-scan"
-description: "Triggers compliance scan on Azure resources and fails/passes based on the compliance state of the resources"
+name: "Policy Compliance Scan"
+description: "Triggers compliance scan on Azure resources and passes/fails based on the compliance state of the resources"
 inputs:
   scopes:
     description: "Mandatory. Takes full identifier for one or more azure resources, resource groups or subscriptions. The on-demand policy compliance scan is triggered for all of these. The ID can generally be found in the properties section of the resource in Azure Portal."
