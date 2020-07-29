@@ -5,7 +5,7 @@ With the Azure Policy Compliance Scan action, you can now easily trigger a [on d
 
 New to Azure Policy? Its an Azure service that lets you enforce organizational standards and asses compliance at scale. To know more check out: [Azure Policies - Overview](https://docs.microsoft.com/en-us/azure/governance/policy/overview)
 
-The definition of this Github Action is in [action.yml](https://github.com/Azure/policy-compliance-scan/blob/master/action.yml).
+The definition of this Github Action is in [action.yml](https://github.com/Azure/policy-compliance-scan/blob/main/action.yml).
 
 # Inputs for the Action
 
