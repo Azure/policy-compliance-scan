@@ -1,4 +1,4 @@
-name: "policy-compliance-scan"
+name: "Azure Policy Compliance Scan"
 description: "Triggers compliance scan on Azure resources and fails/passes based on the compliance state of the resources"
 inputs:
   scopes:
