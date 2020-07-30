@@ -38,7 +38,7 @@ jobs:
     steps:
     # Azure Login       
     - name: Login to Azure
-      uses: azure/login@v1.1
+      uses: azure/login@v1
       with:
         creds: ${{secrets.AZURE_CREDENTIALS}} 
     
@@ -67,7 +67,7 @@ jobs:
     steps:
     # Azure Login       
     - name: Login to Azure
-      uses: azure/login@v1.1
+      uses: azure/login@v1
       with:
         creds: ${{secrets.AZURE_CREDENTIALS}} 
     
@@ -97,7 +97,7 @@ jobs:
     steps:
     # Azure Login       
     - name: Login to Azure
-      uses: azure/login@v1.1
+      uses: azure/login@v1
       with:
         creds: ${{secrets.AZURE_CREDENTIALS}} 
     
