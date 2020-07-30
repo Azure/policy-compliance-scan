@@ -38,7 +38,7 @@ jobs:
     steps:
     # Azure Login       
     - name: Login to Azure
-      uses: azure/login@v1.1
+      uses: azure/login@v1
       with:
         creds: ${{secrets.AZURE_CREDENTIALS}} 
     
@@ -67,7 +67,7 @@ jobs:
     steps:
     # Azure Login       
     - name: Login to Azure
-      uses: azure/login@v1.1
+      uses: azure/login@v1
       with:
         creds: ${{secrets.AZURE_CREDENTIALS}} 
     
@@ -97,7 +97,7 @@ jobs:
     steps:
     # Azure Login       
     - name: Login to Azure
-      uses: azure/login@v1.1
+      uses: azure/login@v1
       with:
         creds: ${{secrets.AZURE_CREDENTIALS}} 
     
@@ -112,7 +112,6 @@ jobs:
         
 ```
 The above workflow will trigger a policy compliance scan on the provided subscription and proceed to the next step without waiting for the compliance scan to be complete. In this case the triggering of scan is successful, then the action will be marked as passed. To see the progress/result of scan, the user can refer the activity logs for the subscription or resource group.
-
 
 ## Configure credentials for Azure login action:
 
