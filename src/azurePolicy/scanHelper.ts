@@ -45,6 +45,7 @@ async function triggerScan(scope: string, token: string): Promise<string> {
   webRequest.headers = {
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json; charset=utf-8",
+    "User-Agent": `${process.env.AZURE_HTTP_USER_AGENT}`
   };
 
   printPartitionedText(`Triggering scan. URL: ${triggerScanUrl}`);
@@ -96,6 +97,7 @@ async function isScanCompleted(
   webRequest.headers = {
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json; charset=utf-8",
+    "User-Agent": `${process.env.AZURE_HTTP_USER_AGENT}`
   };
 
   return sendRequest(webRequest)

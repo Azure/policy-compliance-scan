@@ -102,6 +102,7 @@ export async function batchCall(
   batchWebRequest.headers = {
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json; charset=utf-8",
+    "User-Agent": `${process.env.AZURE_HTTP_USER_AGENT}`
   };
   batchWebRequest.body =
     batchRequests && batchRequests.length > 0

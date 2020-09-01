@@ -5,7 +5,7 @@ import {
   ScanCompletionPoll,
   triggerOnDemandScan,
 } from "./azurePolicy/scanHelper";
-import { printPartitionedText } from "./utils/utilities";
+import { printPartitionedText, setUpUserAgent } from "./utils/utilities";
 
 export async function run() {
   try {
@@ -15,7 +15,9 @@ export async function run() {
       core.setFailed("No scopes supplied for scanning.");
       return;
     }
-
+    // Set up user agent for rest calls to Azure
+    setUpUserAgent();
+    
     //Trigger on-demand policy scan
     let polls: ScanCompletionPoll[] = await triggerOnDemandScan();
 
