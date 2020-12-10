@@ -5,12 +5,14 @@ import { mocked } from 'ts-jest/utils';
 import * as scanHelper from '../src/azurePolicy/scanHelper'
 import * as fileHelper from '../src/utils/fileHelper'
 import * as client from '../src/utils/httpClient'
+import { ManagementUrlHelper } from '../src/auth/managementUrlHelper'
 
 const coreMock = mocked(core, true);
 const tokenGeneratorMock = mocked(tokenGenerator, true);
 const clientMock = mocked(client, true);
 const fileHelperMock = mocked(fileHelper, true);
 const scanHelperMock = mocked(scanHelper, true);
+const baseUrlMock = mocked(ManagementUrlHelper, true);
 
 fileHelperMock.getPolicyScanDirectory = jest.fn().mockImplementation(() => { return 'test/_temp/containerscan_123'; });
 
@@ -27,6 +29,8 @@ test("triggerScan() - correct scope uri is triggered", async () => {
         }
         return Promise.resolve(webResponse);
     });
+
+    baseUrlMock.getBaseUrl = jest.fn().mockResolvedValue("https://management.azure.com");
 
     // invoke and assert 
     await expect(scanHelper.triggerOnDemandScan()).resolves.not.toThrow();
@@ -49,6 +53,7 @@ test("triggerScan() - correct scopes uri is triggered", async () => {
         }
         return Promise.resolve(webResponse);
     });
+    baseUrlMock.getBaseUrl = jest.fn().mockResolvedValue("https://management.azure.com");
 
     // invoke and assert 
     await expect(scanHelper.triggerOnDemandScan()).resolves.not.toThrow();
@@ -84,6 +89,7 @@ test("pollForCompletion() - use poll location returned by triggerScan", async ()
     scanHelperMock.pollForCompletion = jest.fn().mockResolvedValue('');
     fileHelperMock.getScanReportPath = jest.fn().mockReturnValue('');
     fileHelperMock.getFileJson = jest.fn().mockReturnValue(null);
+    baseUrlMock.getBaseUrl = jest.fn().mockResolvedValue("https://management.azure.com");
 
     //Invoke and assert
     await expect(run()).resolves.not.toThrow();
