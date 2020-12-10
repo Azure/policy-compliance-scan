@@ -13,6 +13,7 @@ import {
   sleep,
   printPartitionedText,
 } from "../utils/utilities";
+import { ManagementUrlHelper } from "../auth/managementUrlHelper";
 
 const BATCH_MAX_SIZE = 500;
 const BATCH_POLL_INTERVAL: number = 60 * 1000; // 1 min = 60 * 1000ms
@@ -98,7 +99,7 @@ export async function batchCall(
   batchWebRequest.uri =
     batchUrl && batchUrl.length > 0
       ? batchUrl
-      : `https://management.azure.com/batch?api-version=2020-06-01`;
+      : `${ManagementUrlHelper.getBaseUrl()}/batch?api-version=2020-06-01`;
   batchWebRequest.headers = {
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json; charset=utf-8",
@@ -406,12 +407,13 @@ export async function saveScanResult(polls: any[], token: string) {
   let scanResults: any[] = [];
   let scopes: any = [];
   let resourceIds: string[] = [];
+  const baseUrl = ManagementUrlHelper.getBaseUrl();
 
   //Get query results for each poll.scope
-  let scanResultUrl =
-    "https://management.azure.com${scope}/providers/Microsoft.PolicyInsights/policyStates/latest/queryResults?api-version=2019-10-01&$filter=complianceState eq 'NonCompliant'&$apply=groupby((resourceId),aggregate($count as Count))&$select=ResourceId,Count";
-  let policyEvalUrl =
-    "https://management.azure.com${scope}/providers/Microsoft.PolicyInsights/policyStates/latest/queryResults?api-version=2019-10-01&$expand=PolicyEvaluationDetails";
+  let scanResultUrl = baseUrl +
+    "${scope}/providers/Microsoft.PolicyInsights/policyStates/latest/queryResults?api-version=2019-10-01&$filter=complianceState eq 'NonCompliant'&$apply=groupby((resourceId),aggregate($count as Count))&$select=ResourceId,Count";
+  let policyEvalUrl = baseUrl +
+    "${scope}/providers/Microsoft.PolicyInsights/policyStates/latest/queryResults?api-version=2019-10-01&$expand=PolicyEvaluationDetails";
 
   //First batch call
   printPartitionedDebugLog(

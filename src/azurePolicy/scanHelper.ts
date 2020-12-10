@@ -11,6 +11,7 @@ import {
   printPartitionedDebugLog,
 } from "../utils/utilities";
 import { getAccessToken } from "../auth/azAuthentication";
+import { ManagementUrlHelper } from "../auth/managementUrlHelper";
 
 export interface ScanCompletionPoll {
   scope: string;
@@ -37,7 +38,7 @@ export async function triggerOnDemandScan(): Promise<ScanCompletionPoll[]> {
 }
 
 async function triggerScan(scope: string, token: string): Promise<string> {
-  let triggerScanUrl = `https://management.azure.com${scope}/providers/Microsoft.PolicyInsights/policyStates/latest/triggerEvaluation?api-version=2019-10-01`;
+  let triggerScanUrl = `${ManagementUrlHelper.getBaseUrl()}${scope}/providers/Microsoft.PolicyInsights/policyStates/latest/triggerEvaluation?api-version=2019-10-01`;
 
   let webRequest = new WebRequest();
   webRequest.method = "POST";

@@ -1,9 +1,8 @@
 import * as exec from "@actions/exec";
 import * as io from "@actions/io";
+import { ManagementUrlHelper } from "./managementUrlHelper";
 
 var azPath: string;
-//This will be taken as input from user
-const resource = "https://management.azure.com/";
 
 export async function getAccessToken(): Promise<string> {
   let accessToken = "";
@@ -17,7 +16,7 @@ export async function getAccessToken(): Promise<string> {
 export async function getAADToken(): Promise<string> {
   azPath = await io.which("az", true);
   return await getTokenFromAzCLI(
-    "account get-access-token --resource=" + resource
+    "account get-access-token --resource=" + ManagementUrlHelper.getBaseUrl()
   );
 }
 
