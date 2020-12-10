@@ -99,7 +99,7 @@ export async function batchCall(
   batchWebRequest.uri =
     batchUrl && batchUrl.length > 0
       ? batchUrl
-      : `${ManagementUrlHelper.getBaseUrl()}/batch?api-version=2020-06-01`;
+      : `${await ManagementUrlHelper.getBaseUrl()}/batch?api-version=2020-06-01`;
   batchWebRequest.headers = {
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json; charset=utf-8",
@@ -407,7 +407,7 @@ export async function saveScanResult(polls: any[], token: string) {
   let scanResults: any[] = [];
   let scopes: any = [];
   let resourceIds: string[] = [];
-  const baseUrl = ManagementUrlHelper.getBaseUrl();
+  const baseUrl = await ManagementUrlHelper.getBaseUrl();
 
   //Get query results for each poll.scope
   let scanResultUrl = baseUrl +

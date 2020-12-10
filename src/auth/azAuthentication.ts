@@ -16,7 +16,7 @@ export async function getAccessToken(): Promise<string> {
 export async function getAADToken(): Promise<string> {
   azPath = await io.which("az", true);
   return await getTokenFromAzCLI(
-    "account get-access-token --resource=" + ManagementUrlHelper.getBaseUrl()
+    "account get-access-token --resource=" + await ManagementUrlHelper.getBaseUrl()
   );
 }
 

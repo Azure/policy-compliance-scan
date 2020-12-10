@@ -38,7 +38,7 @@ export async function triggerOnDemandScan(): Promise<ScanCompletionPoll[]> {
 }
 
 async function triggerScan(scope: string, token: string): Promise<string> {
-  let triggerScanUrl = `${ManagementUrlHelper.getBaseUrl()}${scope}/providers/Microsoft.PolicyInsights/policyStates/latest/triggerEvaluation?api-version=2019-10-01`;
+  let triggerScanUrl = `${await ManagementUrlHelper.getBaseUrl()}${scope}/providers/Microsoft.PolicyInsights/policyStates/latest/triggerEvaluation?api-version=2019-10-01`;
 
   let webRequest = new WebRequest();
   webRequest.method = "POST";
