@@ -1,18 +1,16 @@
 import { run } from '../src/run';
 import * as core from '@actions/core';
-import * as tokenGenerator from '../src/auth/azAuthentication'
 import { mocked } from 'ts-jest/utils';
 import * as scanHelper from '../src/azurePolicy/scanHelper'
 import * as fileHelper from '../src/utils/fileHelper'
 import * as client from '../src/utils/httpClient'
-import { ManagementUrlHelper } from '../src/auth/managementUrlHelper'
+import { AzCli } from '../src/azure/azCli'
 
 const coreMock = mocked(core, true);
-const tokenGeneratorMock = mocked(tokenGenerator, true);
 const clientMock = mocked(client, true);
 const fileHelperMock = mocked(fileHelper, true);
 const scanHelperMock = mocked(scanHelper, true);
-const baseUrlMock = mocked(ManagementUrlHelper, true);
+const AzCliMock = mocked(AzCli, true);
 
 fileHelperMock.getPolicyScanDirectory = jest.fn().mockImplementation(() => { return 'test/_temp/containerscan_123'; });
 
@@ -20,7 +18,7 @@ test("triggerScan() - correct scope uri is triggered", async () => {
     let scopes = '/scope';
     coreMock.getInput = jest.fn().mockReturnValue(scopes);
 
-    tokenGeneratorMock.getAccessToken = jest.fn().mockResolvedValue("token");
+    AzCliMock.getAccessToken = jest.fn().mockResolvedValue("token");
     clientMock.sendRequest = jest.fn().mockImplementation(() => {
         let webResponse = new client.WebResponse();
         webResponse.statusCode = client.StatusCodes.ACCEPTED;
@@ -30,7 +28,7 @@ test("triggerScan() - correct scope uri is triggered", async () => {
         return Promise.resolve(webResponse);
     });
 
-    baseUrlMock.getBaseUrl = jest.fn().mockResolvedValue("https://management.azure.com");
+    AzCliMock.getManagementUrl = jest.fn().mockResolvedValue("https://management.azure.com");
 
     // invoke and assert 
     await expect(scanHelper.triggerOnDemandScan()).resolves.not.toThrow();
@@ -44,7 +42,7 @@ test("triggerScan() - correct scopes uri is triggered", async () => {
     let scopes = '/subscriptions/1234\n/subscriptions/2345';
     coreMock.getInput = jest.fn().mockReturnValue(scopes);
 
-    tokenGeneratorMock.getAccessToken = jest.fn().mockResolvedValue("token");
+    AzCliMock.getAccessToken = jest.fn().mockResolvedValue("token");
     clientMock.sendRequest = jest.fn().mockImplementation(() => {
         let webResponse = new client.WebResponse();
         webResponse.statusCode = client.StatusCodes.ACCEPTED;
@@ -53,7 +51,7 @@ test("triggerScan() - correct scopes uri is triggered", async () => {
         }
         return Promise.resolve(webResponse);
     });
-    baseUrlMock.getBaseUrl = jest.fn().mockResolvedValue("https://management.azure.com");
+    AzCliMock.getManagementUrl = jest.fn().mockResolvedValue("https://management.azure.com");
 
     // invoke and assert 
     await expect(scanHelper.triggerOnDemandScan()).resolves.not.toThrow();
@@ -75,7 +73,7 @@ test("pollForCompletion() - use poll location returned by triggerScan", async ()
         return scopes;
     });
 
-    tokenGeneratorMock.getAADToken = jest.fn().mockResolvedValue('{"accessToken":"awdwd", "expiresOn":"20-07-20"}');
+    AzCliMock.getAccessToken = jest.fn().mockResolvedValue("token");
 
     clientMock.sendRequest = jest.fn().mockImplementation(() => {
         let webResponse = new client.WebResponse();
@@ -89,7 +87,7 @@ test("pollForCompletion() - use poll location returned by triggerScan", async ()
     scanHelperMock.pollForCompletion = jest.fn().mockResolvedValue('');
     fileHelperMock.getScanReportPath = jest.fn().mockReturnValue('');
     fileHelperMock.getFileJson = jest.fn().mockReturnValue(null);
-    baseUrlMock.getBaseUrl = jest.fn().mockResolvedValue("https://management.azure.com");
+    AzCliMock.getManagementUrl = jest.fn().mockResolvedValue("https://management.azure.com");
 
     //Invoke and assert
     await expect(run()).resolves.not.toThrow();
