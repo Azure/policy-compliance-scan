@@ -34,6 +34,7 @@ export async function run() {
     }
   } catch (error) {
     core.setFailed(error.message);
+    printPartitionedText(`Error : ${error.message}`);
   }
 }
 
