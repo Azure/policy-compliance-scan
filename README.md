@@ -173,6 +173,7 @@ You can also provide permissions to multiple scopes using the Azure CLI command:
   
 ```
 
+Azure Policy Compliance Scan action is supported on both 'AzureUSGovernment' or 'AzureChinaCloud'.Login to the respective Azure Cloud before running this action using [Azure Login](https://github.com/Azure/login)
 
 # Contributing
 
