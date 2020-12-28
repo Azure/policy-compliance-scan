@@ -5,7 +5,7 @@ With the Azure Policy Compliance Scan action, you can now easily trigger a [on d
 
 New to Azure Policy? Its an Azure service that lets you enforce organizational standards and asses compliance at scale. To know more check out: [Azure Policies - Overview](https://docs.microsoft.com/en-us/azure/governance/policy/overview)
 
-The definition of this Github Action is in [action.yml](https://github.com/Azure/policy-compliance-scan/blob/main/action.yml).
+The definition of this Github Action is in [action.yml](https://github.com/Azure/policy-compliance-scan/blob/main/action.yml). 
 
 # Inputs for the Action
 
@@ -22,6 +22,8 @@ The definition of this Github Action is in [action.yml](https://github.com/Azure
 ## Dependencies on other Github Actions
 
 * Azure Login Action: Authenticate using [Azure Login](https://github.com/Azure/login)  action. The Policy Compliance Scan action assumes that Azure Login is done using an Azure service principal that has sufficient permissions to trigger azure policy compliance scan on selected scopes. Once login is done, the next set of Actions in the workflow can perform tasks such as triggering the compliance scan and fetching the compliance state of resources. For more details, checkout 'Configure credentials for Azure login action' section in this file or alternatively you can refer the full [documentation](https://github.com/Azure/login) of Azure Login Action.
+
+This action is supported for the Azure public cloud as well as Azure government clouds ('AzureUSGovernment' or 'AzureChinaCloud') and Azure Stack ('AzureStack') Hub. Before running this action, login to the respective Azure Cloud  using [Azure Login](https://github.com/Azure/login) by setting appropriate value for the `environment` parameter.
 
   
 ### Sample workflow to trigger a scan on a subscription 
@@ -173,7 +175,6 @@ You can also provide permissions to multiple scopes using the Azure CLI command:
   
 ```
 
-Azure Policy Compliance Scan action is supported on both 'AzureUSGovernment' or 'AzureChinaCloud'.Login to the respective Azure Cloud before running this action using [Azure Login](https://github.com/Azure/login)
 
 # Contributing
 
