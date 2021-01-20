@@ -9,6 +9,7 @@ const CSV_FILENAME = "ScanReport";
 const KEY_RESOURCE_ID = "resourceId";
 const KEY_POLICY_ASSG_ID = "policyAssignmentId";
 const KEY_POLICY_DEF_ID = "policyDefinitionId";
+const KEY_POLICY_SET_ID = "policySetDefinitionId";
 const KEY_RESOURCE_TYPE = "resourceType";
 const KEY_RESOURCE_LOCATION = "resourceLocation";
 const KEY_COMPLIANCE_STATE = "complianceState";
@@ -147,6 +148,7 @@ export function printFormattedOutput(data: any[]): any[] {
         row.push(cve[KEY_RESOURCE_LOCATION]);
         row.push(policyEvaluationLogStr);
         row.push(cve[KEY_COMPLIANCE_STATE]);
+        row.push(cve[KEY_POLICY_SET_ID]);
         rows.push(row);
         logRows++;
       }
@@ -176,6 +178,7 @@ export function printFormattedOutput(data: any[]): any[] {
         csvRow.push(cve[KEY_RESOURCE_LOCATION]);
         csvRow.push(policyEvaluationCsvStr);
         csvRow.push(cve[KEY_COMPLIANCE_STATE]);
+        csvRow.push(cve[KEY_POLICY_SET_ID]);
         csvRows.push(csvRow);
       }
     });
