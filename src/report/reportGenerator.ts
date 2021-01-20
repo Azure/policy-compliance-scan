@@ -121,8 +121,7 @@ export function printFormattedOutput(data: any[]): any[] {
   let logRows = 0;
   try {
     rows.push(titles);
-    titles.push(TITLE_POLICY_SET_ID);
-    csvRows.push(titles);
+    csvRows.push([...titles, TITLE_POLICY_SET_ID]);
 
     data.forEach((cve: any) => {
       let row: any = [];
