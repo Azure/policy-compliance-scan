@@ -17,6 +17,7 @@ const KEY_POLICY_EVAL = "policyEvaluation";
 const TITLE_RESOURCE_ID = "RESOURCE_ID";
 const TITLE_POLICY_ASSG_ID = "POLICY_ASSG_ID";
 const TITLE_POLICY_DEF_ID = "POLICY_DEF_ID";
+const TITLE_POLICY_SET_ID = "INITIATIVE_ID";
 const TITLE_RESOURCE_TYPE = "RESOURCE_TYPE";
 const TITLE_RESOURCE_LOCATION = "RESOURCE_LOCATION";
 const TITLE_COMPLIANCE_STATE = "COMPLIANCE_STATE";
@@ -120,6 +121,7 @@ export function printFormattedOutput(data: any[]): any[] {
   let logRows = 0;
   try {
     rows.push(titles);
+    titles.push(TITLE_POLICY_SET_ID);
     csvRows.push(titles);
 
     data.forEach((cve: any) => {
@@ -143,12 +145,16 @@ export function printFormattedOutput(data: any[]): any[] {
         }
         row.push(cve[KEY_RESOURCE_ID]);
         row.push(cve[KEY_POLICY_ASSG_ID]);
-        row.push(cve[KEY_POLICY_DEF_ID]);
+
+        if (cve[KEY_POLICY_SET_ID]) {
+          row.push(`${cve[KEY_POLICY_SET_ID]} : ${cve[KEY_POLICY_DEF_ID]}`);
+        } else {
+          row.push(cve[KEY_POLICY_DEF_ID]);
+        }
         row.push(cve[KEY_RESOURCE_TYPE]);
         row.push(cve[KEY_RESOURCE_LOCATION]);
         row.push(policyEvaluationLogStr);
         row.push(cve[KEY_COMPLIANCE_STATE]);
-        row.push(cve[KEY_POLICY_SET_ID]);
         rows.push(row);
         logRows++;
       }
