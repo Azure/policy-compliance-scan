@@ -151,7 +151,7 @@ export function printFormattedOutput(data: any[]): any[] {
         row.push(cve[KEY_POLICY_ASSG_ID]);
 
         if (cve[KEY_POLICY_SET_ID]) {
-          row.push(`${cve[KEY_POLICY_DEF_ID]} \n (${cve[KEY_POLICY_SET_ID]})`);
+          row.push(`${cve[KEY_POLICY_DEF_ID]} \n\n (${cve[KEY_POLICY_SET_ID]})`);
         } else {
           row.push(cve[KEY_POLICY_DEF_ID]);
         }
