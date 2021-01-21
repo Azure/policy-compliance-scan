@@ -118,10 +118,15 @@ export function printFormattedOutput(data: any[]): any[] {
     TITLE_POLICY_EVAL,
     TITLE_COMPLIANCE_STATE,
   ];
+
+  // duplicating titles and adding initiative column
+  let csvTitles = titles.slice(0);
+  csvTitles.push(TITLE_POLICY_SET_ID);
+
   let logRows = 0;
   try {
     rows.push(titles);
-    csvRows.push([...titles, TITLE_POLICY_SET_ID]);
+    csvRows.push(csvTitles);
 
     data.forEach((cve: any) => {
       let row: any = [];
@@ -146,7 +151,7 @@ export function printFormattedOutput(data: any[]): any[] {
         row.push(cve[KEY_POLICY_ASSG_ID]);
 
         if (cve[KEY_POLICY_SET_ID]) {
-          row.push(`${cve[KEY_POLICY_SET_ID]} : ${cve[KEY_POLICY_DEF_ID]}`);
+          row.push(`${cve[KEY_POLICY_DEF_ID]} (${cve[KEY_POLICY_SET_ID]})`);
         } else {
           row.push(cve[KEY_POLICY_DEF_ID]);
         }
