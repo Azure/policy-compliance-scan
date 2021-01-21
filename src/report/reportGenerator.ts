@@ -9,6 +9,7 @@ const CSV_FILENAME = "ScanReport";
 const KEY_RESOURCE_ID = "resourceId";
 const KEY_POLICY_ASSG_ID = "policyAssignmentId";
 const KEY_POLICY_DEF_ID = "policyDefinitionId";
+const KEY_POLICY_SET_ID = "policySetDefinitionId";
 const KEY_RESOURCE_TYPE = "resourceType";
 const KEY_RESOURCE_LOCATION = "resourceLocation";
 const KEY_COMPLIANCE_STATE = "complianceState";
@@ -16,6 +17,7 @@ const KEY_POLICY_EVAL = "policyEvaluation";
 const TITLE_RESOURCE_ID = "RESOURCE_ID";
 const TITLE_POLICY_ASSG_ID = "POLICY_ASSG_ID";
 const TITLE_POLICY_DEF_ID = "POLICY_DEF_ID";
+const TITLE_POLICY_SET_ID = "INITIATIVE_ID";
 const TITLE_RESOURCE_TYPE = "RESOURCE_TYPE";
 const TITLE_RESOURCE_LOCATION = "RESOURCE_LOCATION";
 const TITLE_COMPLIANCE_STATE = "COMPLIANCE_STATE";
@@ -116,10 +118,15 @@ export function printFormattedOutput(data: any[]): any[] {
     TITLE_POLICY_EVAL,
     TITLE_COMPLIANCE_STATE,
   ];
+
+  // duplicating titles and adding initiative column
+  let csvTitles = titles.slice(0);
+  csvTitles.push(TITLE_POLICY_SET_ID);
+
   let logRows = 0;
   try {
     rows.push(titles);
-    csvRows.push(titles);
+    csvRows.push(csvTitles);
 
     data.forEach((cve: any) => {
       let row: any = [];
@@ -142,7 +149,12 @@ export function printFormattedOutput(data: any[]): any[] {
         }
         row.push(cve[KEY_RESOURCE_ID]);
         row.push(cve[KEY_POLICY_ASSG_ID]);
-        row.push(cve[KEY_POLICY_DEF_ID]);
+
+        if (cve[KEY_POLICY_SET_ID]) {
+          row.push(`${cve[KEY_POLICY_DEF_ID]} \n\n (${cve[KEY_POLICY_SET_ID]})`);
+        } else {
+          row.push(cve[KEY_POLICY_DEF_ID]);
+        }
         row.push(cve[KEY_RESOURCE_TYPE]);
         row.push(cve[KEY_RESOURCE_LOCATION]);
         row.push(policyEvaluationLogStr);
@@ -176,6 +188,7 @@ export function printFormattedOutput(data: any[]): any[] {
         csvRow.push(cve[KEY_RESOURCE_LOCATION]);
         csvRow.push(policyEvaluationCsvStr);
         csvRow.push(cve[KEY_COMPLIANCE_STATE]);
+        csvRow.push(cve[KEY_POLICY_SET_ID]);
         csvRows.push(csvRow);
       }
     });
