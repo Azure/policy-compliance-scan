@@ -490,6 +490,7 @@ export async function saveScanResult(polls: any[], token: string) {
                   resourceId: resultJson.resourceId,
                   policyAssignmentId: resultJson.policyAssignmentId,
                   policyDefinitionId: resultJson.policyDefinitionId,
+                  policySetDefinitionId: resultJson.policySetDefinitionId,
                   resourceLocation: resultJson.resourceLocation,
                   resourceType: resultJson.resourceType,
                   complianceState: resultJson.complianceState,
