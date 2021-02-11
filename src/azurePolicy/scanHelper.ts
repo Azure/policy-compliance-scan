@@ -10,7 +10,7 @@ import {
   printPartitionedText,
   printPartitionedDebugLog,
 } from "../utils/utilities";
-import { getAccessToken } from "../auth/azAuthentication";
+import { AzCli } from '../azure/azCli'
 
 export interface ScanCompletionPoll {
   scope: string;
@@ -19,7 +19,7 @@ export interface ScanCompletionPoll {
 }
 
 export async function triggerOnDemandScan(): Promise<ScanCompletionPoll[]> {
-  const token = await getAccessToken();
+  const token = await AzCli.getAccessToken();
   const scopesInput = core.getInput('scopes');
   const scopes = scopesInput ? scopesInput.split('\n') : [];
 
@@ -37,7 +37,8 @@ export async function triggerOnDemandScan(): Promise<ScanCompletionPoll[]> {
 }
 
 async function triggerScan(scope: string, token: string): Promise<string> {
-  let triggerScanUrl = `https://management.azure.com${scope}/providers/Microsoft.PolicyInsights/policyStates/latest/triggerEvaluation?api-version=2019-10-01`;
+  const managementUrl: string = await AzCli.getManagementUrl();
+  let triggerScanUrl = `${managementUrl}${scope}/providers/Microsoft.PolicyInsights/policyStates/latest/triggerEvaluation?api-version=2019-10-01`;
 
   let webRequest = new WebRequest();
   webRequest.method = "POST";
@@ -124,7 +125,7 @@ function sleep(ms) {
 
 export async function pollForCompletion(polls: ScanCompletionPoll[]) {
   printPartitionedText("Starting to poll for scan statuses. Polling details:");
-  const token = await getAccessToken();
+  const token = await AzCli.getAccessToken();
   polls.forEach((poll) => {
     console.log(`scope: ${poll.scope}\nurl: ${poll.location}\n`);
   });
