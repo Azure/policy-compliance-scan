@@ -7,7 +7,7 @@ import {
 } from "../utils/httpClient";
 import * as fs from "fs";
 import * as fileHelper from "../utils/fileHelper";
-import { ignoreScope } from "../report/ignoreResultHelper";
+import { ignorePolicyAssignment, ignoreScope } from "../report/ignoreResultHelper";
 import {
   printPartitionedDebugLog,
   sleep,
@@ -126,8 +126,7 @@ export async function batchCall(
         return Promise.resolve(response);
       }
       return Promise.reject(
-        `An error occured while fetching the batch result. StatusCode: ${
-          response.statusCode
+        `An error occured while fetching the batch result. StatusCode: ${response.statusCode
         }, Body: ${JSON.stringify(response.body)}`
       );
     })
@@ -441,6 +440,7 @@ export async function saveScanResult(polls: any[], token: string) {
   // Getting unique scopes and ignoring
   let result: boolean = true;
   let isResourceIgnored: boolean = false;
+  let isPolicyAssignementIgnored: boolean = false;
   const ignoreAllScopes: boolean = core.getInput("scopes-ignore") ? core.getInput("scopes-ignore").toLowerCase() == "all" : false;
 
   printPartitionedText(`Ignoring resources : `);
@@ -472,12 +472,21 @@ export async function saveScanResult(polls: any[], token: string) {
   );
   await computeBatchCalls(policyEvalUrl, "POST", null, scopes, token)
     .then((responseList) => {
+      printPartitionedText(`Ignoring policy assignments : `);
+
       responseList.forEach((resultsObject) => {
         if (resultsObject.httpStatusCode == 200) {
           scanResults.push(
             ...resultsObject.content.value
               .filter((result) => {
-                return result.complianceState == "NonCompliant";
+                const ignoredAssignment: boolean = ignorePolicyAssignment(result.policyAssignmentId);
+
+                if (ignoredAssignment) {
+                  isPolicyAssignementIgnored = true;
+                  console.log(`${result.policyAssignmentId} on ${result.resourceId}`);
+                }
+
+                return result.complianceState == "NonCompliant" && !ignoredAssignment;
               })
               .map((resultJson) => {
                 let policyEvaluationDetails: any = {};
@@ -504,6 +513,10 @@ export async function saveScanResult(polls: any[], token: string) {
           );
         }
       });
+
+      if (!isPolicyAssignementIgnored) {
+        printPartitionedText(`No policy assignments ignored`);
+      }
     })
     .catch((error) => {
       throw Error(`Error in second batch call. ${error}`);
@@ -515,7 +528,7 @@ export async function saveScanResult(polls: any[], token: string) {
       const scanReportPath = fileHelper.getScanReportPath();
       let rawContent = fs.readFileSync(scanReportPath, "utf8");
       let savedData: any[] = [];
-      if(rawContent && rawContent.length > 0){
+      if (rawContent && rawContent.length > 0) {
         savedData = JSON.parse(rawContent);
       }
       savedData.push(scanResults);
