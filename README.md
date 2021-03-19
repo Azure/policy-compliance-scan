@@ -82,6 +82,34 @@ jobs:
 ```
 The above workflow will trigger a policy compliance scan on the 'QA' resource group. After the scan is complete, it will fetch the compliance state of resources. The action will fail if there are any non-compliant resources except for 'demoApp' resource.
 
+### Sample workflow to trigger a scan at resource(s) level 
+
+
+```yaml
+# File: .github/workflows/workflow.yml
+
+on: push
+
+jobs:
+  assess-policy-compliance:    
+    runs-on: ubuntu-latest
+    steps:
+    # Azure Login       
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}} 
+    
+    - name: Check for resource compliance
+      uses: azure/policy-compliance-scan@v0
+      with:
+        scopes: |
+          /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/QA/providers/Microsoft.Web/sites/demoApp
+          /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/QA/providers/Microsoft.Compute/virtualMachines/my-vm
+        
+```
+The above workflow will trigger a policy compliance scan on the two resources - demoApp and my-vm. After the scan is complete, it will fetch the compliance state of the two resources. The action will fail if any of the two resources is non-compliant.
+
 
 ### Sample workflow to trigger a scan on a subscription and continue with workflow without waiting for scan completion
 
