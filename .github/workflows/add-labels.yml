@@ -1,6 +1,8 @@
 name: add-labels
 on: 
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   test_action_job:
