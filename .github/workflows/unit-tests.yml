@@ -1,3 +1,4 @@
+name: "Run unit tests."
 on:
   pull_request:
   push:
