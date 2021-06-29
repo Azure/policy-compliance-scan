@@ -5,6 +5,7 @@ prNumber=$4
 frombranch=$5
 tobranch=$6
 patUser=$7
+fromRepo=$8
 
 getPayLoad() {
     cat <<EOF
@@ -18,6 +19,7 @@ getPayLoad() {
         "prNumber": "$prNumber", 
         "tobranch": "$tobranch", 
         "frombranch": "$frombranch"
+        "fromRepo": "$fromRepo"
     }
 }
 EOF
