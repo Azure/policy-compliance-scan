@@ -18,7 +18,7 @@ getPayLoad() {
         "repository": "$repository", 
         "prNumber": "$prNumber", 
         "tobranch": "$tobranch", 
-        "frombranch": "$frombranch"
+        "frombranch": "$frombranch",
         "fromRepo": "$fromRepo"
     }
 }
