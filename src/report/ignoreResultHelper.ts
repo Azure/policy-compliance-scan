@@ -28,3 +28,24 @@ function getIgnoreScopes(): string[] {
   const ignoreScopes = ignoreScopesInput ? ignoreScopesInput.split("\n") : [];
   return ignoreScopes;
 }
+
+export function ignorePolicyAssignment(policyAssignmentId: string): boolean {
+  if (!policyAssignmentId) {
+    return false;
+  }
+
+  const ignoreList: string[] = getIgnorePolicyAssignments();
+
+  for (const ignorePolicyAssignment of ignoreList) {
+    if (policyAssignmentId.toLowerCase() == ignorePolicyAssignment.toLowerCase()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function getIgnorePolicyAssignments(): string[] {
+  const ignorePolicyAssignmentsInput = core.getInput("policy-assignments-ignore");
+  const ignorePolicyAssignments = ignorePolicyAssignmentsInput ? ignorePolicyAssignmentsInput.split("\n") : [];
+  return ignorePolicyAssignments;
+}
