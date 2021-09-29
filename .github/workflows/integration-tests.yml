@@ -22,8 +22,8 @@ jobs:
             commit: ${{ github.event.pull_request.head.sha }}
             repository: ${{ github.repository }}
             prnumber: ${{ github.event.pull_request.number }}
-            prsource: ${{ github.event.pull_request.base.ref }}
-            prtarget: ${{ github.event.pull_request.head.ref }}
+            prsource: ${{ github.event.pull_request.head.ref }}
+            prtarget: ${{ github.event.pull_request.base.ref }}
             username:  ${{ secrets.L2_REPO_USER }} 
             prsourcerepository: ${{ github.event.pull_request.head.repo.full_name }}
           run: |
