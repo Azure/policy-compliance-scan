@@ -10,7 +10,8 @@ The definition of this Github Action is in [action.yml](https://github.com/Azure
 # Inputs for the Action
 
 * `scopes`: mandatory. Takes a full identifier for one or more azure resources, resource groups or subscriptions. The on-demand policy compliance scan is triggered for all of these. The identifier(resource ID or the subscription ID) can generally be found in the properties section of the resource in Azure Portal.
-* `scopes-ignore`: Optional. Takes full identifier for one or more azure resources, resource groups. If the resources are found non-compliant after the scan completion, the action fails. However, in this input you can specify resources or resource groups for which the compliance state will be ignored. The action will pass irrespective of the compliance state of these resources.  In case you want the action to always pass irrespective of the compliance state of resources, you can set its value as 'all'. 
+* `scopes-ignore`: Optional. Takes full identifier for one or more azure resources, resource groups. If the resources are found non-compliant after the scan completion, the action fails. However, in this input you can specify resources or resource groups for which the compliance state will be ignored. The action will pass irrespective of the compliance state of these resources.  In case you want the action to always pass irrespective of the compliance state of resources, you can set its value as 'all'.
+* `policy-assignments-ignore`: Optional. Takes full identifier for one or more policy assignments ids. If the resources are found non-compliant for given policy after the scan completion, the action fails. However, in this input you can specify policy assignments ids for which the compliance state will be ignored. The action will pass irrespective of the compliance state of these policies.
 * `wait`: Optional. Depending on the breadth, the time taken for compliance scan can range from a few minutes to several hours. By default, the action will wait for the compliance scan to complete and succeed or fail based on the compliance state of resources. However, you can mark this input as false, in which case the action will trigger the compliance scan and succeed immediately. The status of the triggered scan and the compliance state of resources would have to be then viewed in [activity log](https://docs.microsoft.com/en-us/azure/azure-monitor/platform/activity-log) of the resource in Azure portal. 
 * `skip-report`: Optional. Defaults to false. If false, the action will upload a CSV file containing a list of resources that are non-compliant after the triggered scan is complete. The CSV file can be downloaded as an artifact from the workflow run for manual analysis. Note that the number of rows in CSV are capped at 100,000. 
 * `report-name`: Optional. The filename for the CSV to be uploaded. Ignored if skip-report is set to true.
@@ -84,8 +85,7 @@ jobs:
 ```
 The above workflow will trigger a policy compliance scan on the 'QA' resource group. After the scan is complete, it will fetch the compliance state of resources. The action will fail if there are any non-compliant resources except for 'demoApp' resource.
 
-### Sample workflow to trigger a scan at resource(s) level 
-
+### Sample workflow to trigger a scan at resource(s) level and ignore compliance state for a given policy
 
 ```yaml
 # File: .github/workflows/workflow.yml
@@ -108,10 +108,11 @@ jobs:
         scopes: |
           /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/QA/providers/Microsoft.Web/sites/demoApp
           /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/QA/providers/Microsoft.Compute/virtualMachines/my-vm
+        policy-assignments-ignore: |
+          /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/policyAssignments/SecurityCenterBuiltIn
         
 ```
-The above workflow will trigger a policy compliance scan on the two resources - demoApp and my-vm. After the scan is complete, it will fetch the compliance state of the two resources. The action will fail if any of the two resources is non-compliant.
-
+The above workflow will trigger a policy compliance scan on the two resources - demoApp and my-vm. After the scan is complete, it will fetch the compliance state of the two resources. The action will fail if any of the two resources is non-compliant except on _Azure Security Center_ built-in policies.
 
 ### Sample workflow to trigger a scan on a subscription and continue with workflow without waiting for scan completion
 
