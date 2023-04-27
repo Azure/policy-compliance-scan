@@ -22,7 +22,7 @@
     "@actions/exec": "^1.0.1",
     "@actions/io": "^1.0.1",
     "table": "5.4.6",
-    "typed-rest-client": "^1.5.0",
+    "typed-rest-client": "^1.8.0",
     "uuid": "8.1.0"
   }
 }
